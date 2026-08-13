@@ -1772,6 +1772,11 @@ render();
 if (!S.entries.length) {
   setTimeout(() => toast("Tap + to log your first movement"), 700);
 }
+  if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
 </script>
 </body>
 </html>
