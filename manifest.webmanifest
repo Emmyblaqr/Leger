@@ -2,7 +2,7 @@
   "name": "Ledger",
   "short_name": "Ledger",
   "description": "Offline personal money book",
-  "start_url": "./ledger.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
