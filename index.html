@@ -1,0 +1,2019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0A0A0A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Ledger</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0A'/%3E%3Crect x='16' y='14' width='32' height='36' rx='3' fill='none' stroke='%23F5F5F5' stroke-width='3'/%3E%3Cpath d='M23 25h18M23 32h18M23 39h11' stroke='%23F5F5F5' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="manifest" href="./manifest.webmanifest">
+<style>
+:root{
+  --bg:#0A0A0A;
+  --card:#121212;
+  --card2:#171717;
+  --line:#262626;
+  --line2:#333333;
+  --ink:#F5F5F5;
+  --ink2:#A3A3A3;
+  --ink3:#6E6E6E;
+  --ink4:#4A4A4A;
+  --pos:#E8E8E8;
+  --warn:#FF8A8A;
+  --good:#4ADE9C;
+  --bad:#FF6B7A;
+  --accent:#F5A524;
+  --accent-ink:#1A1200;
+  --navbg:rgba(10,10,10,.94);
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:14px;
+  --pad:16px;
+}
+:root[data-theme="light"]{
+  --bg:#F7F4EE;
+  --card:#FFFFFF;
+  --card2:#F1ECE2;
+  --line:#E4DDCD;
+  --line2:#D2C8B2;
+  --ink:#241F14;
+  --ink2:#635A44;
+  --ink3:#948A6E;
+  --ink4:#B8AE93;
+  --pos:#241F14;
+  --warn:#C4362B;
+  --good:#1E9A63;
+  --bad:#D3413A;
+  --accent:#B5720F;
+  --accent-ink:#FFFFFF;
+  --navbg:rgba(255,255,255,.92);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+  padding-bottom:calc(74px + env(safe-area-inset-bottom,0px));
+}
+#app{max-width:560px;margin:0 auto;padding:0 var(--pad)}
+button{font-family:inherit;font-size:15px;color:inherit;background:none;border:none;padding:0;cursor:pointer}
+input,select,textarea{
+  font-family:inherit;font-size:16px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:12px;width:100%;appearance:none;
+}
+input:focus,select,textarea:focus{outline:none;border-color:var(--ink3)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--ink3) 50%),linear-gradient(135deg,var(--ink3) 50%,transparent 50%);background-position:calc(100% - 18px) 20px,calc(100% - 13px) 20px;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+input[type=date]{min-height:46px}
+::placeholder{color:var(--ink4)}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+/* ---------- structure ---------- */
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;padding:calc(18px + env(safe-area-inset-top,0px)) 0 14px}
+.eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink3);font-weight:600}
+h1{font-size:25px;line-height:1.1;letter-spacing:-.035em;font-weight:640;margin:3px 0 0}
+h2{font-size:16.5px;letter-spacing:-.02em;font-weight:640;margin:2px 0 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.card.flat{background:none;border:none;padding:0}
+.chead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
+.muted{color:var(--ink2)}
+.dim{color:var(--ink3)}
+.tiny{font-size:12px}
+.mini{font-size:11px}
+.center{text-align:center}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.trunc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stack{display:flex;flex-direction:column;gap:8px}
+.wrap{display:flex;flex-wrap:wrap;gap:7px}
+hr{border:none;border-top:1px solid var(--line);margin:14px -16px}
+.empty{border:1px dashed var(--line2);border-radius:12px;padding:22px 14px;text-align:center;color:var(--ink3);font-size:13.5px}
+.empty b{color:var(--ink2);font-weight:600}
+
+/* receipt dot leader */
+.leader{flex:1;border-bottom:1px dotted var(--line2);margin:0 8px;transform:translateY(-3px);min-width:12px}
+
+/* torn bottom edge for the balance card */
+.torn{position:relative;padding-bottom:22px}
+.torn:after{content:"";position:absolute;left:-1px;right:-1px;bottom:-1px;height:8px;background:
+  linear-gradient(-45deg,var(--bg) 6px,transparent 0) 0 0/12px 12px repeat-x,
+  linear-gradient(45deg,var(--bg) 6px,transparent 0) 0 0/12px 12px repeat-x}
+
+/* ---------- chips ---------- */
+.chip{
+  border:1px solid var(--line);background:var(--card2);color:var(--ink2);
+  border-radius:999px;padding:9px 13px;font-size:13px;font-weight:560;
+  display:inline-flex;align-items:center;gap:7px;min-height:38px;
+}
+.chip .bal{font-family:var(--mono);font-size:11px;color:var(--ink4)}
+.chip[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:680}
+.chip[aria-pressed=true] .bal{color:var(--accent-ink);opacity:.7}
+.chip[data-locked=true]{opacity:.5;border-style:dashed;background:none}
+.chip.add{border-style:dashed;color:var(--ink3);background:none}
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:2px}
+.seg button{flex:1;padding:7px 4px;border-radius:7px;font-size:12px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.seg button[aria-pressed=true]{background:var(--line2);color:var(--ink)}
+.btn{background:var(--accent);color:var(--accent-ink);border-radius:11px;padding:14px;font-weight:700;font-size:15px;width:100%;min-height:50px}
+.btn:disabled{background:var(--line);color:var(--ink4)}
+.btn.ghost{background:none;border:1px solid var(--line2);color:var(--ink);font-weight:600}
+.btn.danger{background:none;border:1px solid var(--bad);color:var(--bad)}
+.btn.sm{padding:9px 12px;font-size:13px;min-height:40px;width:auto;border-radius:9px}
+.ico{width:38px;height:38px;border:1px solid var(--line);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--ink2);background:var(--card2);flex:0 0 auto}
+
+/* ---------- bars ---------- */
+.track{height:6px;border-radius:4px;background:var(--card2);border:1px solid var(--line);overflow:hidden}
+.fill{height:100%;background:var(--accent);border-radius:4px;transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.swatch{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+
+/* ---------- list rows ---------- */
+.item{display:flex;width:100%;text-align:left;gap:11px;padding:12px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.item:last-child{border-bottom:none}
+.badge{width:30px;height:30px;border-radius:9px;border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;flex:0 0 auto;font-size:12px;font-weight:700;font-family:var(--mono);color:var(--ink2);background:var(--card2)}
+.amt{font-family:var(--mono);font-size:14.5px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pill{font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;border:1px solid var(--line2);color:var(--ink3);border-radius:5px;padding:1px 5px}
+.pill.hot{border-color:var(--bad);color:var(--bad)}
+.pill.good{border-color:var(--good);color:var(--good)}
+
+/* ---------- sheet ---------- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:60;display:flex;align-items:flex-end;justify-content:center;animation:fade .18s ease both}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow-y:auto;background:var(--card);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;padding:8px 16px calc(26px + env(safe-area-inset-bottom,0px));animation:up .26s cubic-bezier(.2,.8,.2,1) both}
+.grab{width:38px;height:4px;border-radius:3px;background:var(--line2);margin:6px auto 12px}
+.field{margin-bottom:13px}
+.label{font-size:11.5px;color:var(--ink3);margin-bottom:6px;font-weight:560}
+.bigamt{font-family:var(--mono);font-size:30px;font-weight:640;text-align:center;padding:16px 12px;letter-spacing:-.03em}
+.note{font-size:12px;color:var(--ink3);margin-top:-4px;margin-bottom:12px}
+.alert{border:1px solid var(--line2);background:var(--card2);border-radius:10px;padding:11px 12px;font-size:12.5px;color:var(--ink2);margin-bottom:12px}
+
+/* ---------- nav ---------- */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--navbg);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.navin{max-width:560px;margin:0 auto;display:flex;align-items:center}
+nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 7px;color:var(--ink4)}
+nav button[aria-pressed=true]{color:var(--accent)}
+nav .lab{font-size:9.5px;letter-spacing:.04em;font-weight:640}
+nav .fab{flex:0 0 auto;width:50px;height:50px;border-radius:16px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;justify-content:center;margin:0 6px}
+svg{display:block}
+
+/* ---------- toast ---------- */
+#toast{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;display:flex;justify-content:center;pointer-events:none}
+#toast .t{background:var(--accent);color:var(--accent-ink);border-radius:11px;padding:11px 14px;font-size:13.5px;font-weight:620;display:flex;gap:14px;align-items:center;box-shadow:0 8px 30px rgba(0,0,0,.45);pointer-events:auto;max-width:100%}
+#toast .t button{font-weight:800;font-size:13px;text-decoration:underline}
+
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes up{from{transform:translateY(14px);opacity:.4}to{transform:none;opacity:1}}
+.fadein{animation:fade .22s ease both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav><div class="navin" id="nav"></div></nav>
+<div id="toast"></div>
+<div id="modal"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   LEDGER — offline personal money book
+   One file. No network. Data lives on this device.
+   ============================================================ */
+
+/* ---------- tiny helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+/* safe to drop inside a single-quoted JS string that itself sits in a double-quoted
+   HTML attribute — apostrophes become ' so the HTML parser can't break the JS */
+const jsq = (s) =>
+  String(s == null ? "" : s)
+    .replace(/\\/g, "\\\\")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/'/g, "\\u0027")
+    .replace(/[\r\n]+/g, " ");
+const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const sum = (a) => a.reduce((s, v) => s + v, 0);
+const pad2 = (n) => String(n).padStart(2, "0");
+
+/* dates always in the phone's own calendar day — never UTC */
+const dstr = (d) => d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate());
+const today = () => dstr(new Date());
+const monthOf = (ds) => ds.slice(0, 7);
+const daysBetween = (a, b) => Math.round((new Date(b + "T00:00:00") - new Date(a + "T00:00:00")) / 86400000);
+const daysLeft = (ds) => (ds ? daysBetween(today(), ds) : null);
+const shiftMonth = (mk, d) => {
+  const [y, m] = mk.split("-").map(Number);
+  const t = y * 12 + (m - 1) + d;
+  return Math.floor(t / 12) + "-" + pad2((t % 12) + 1);
+};
+const monthName = (mk) => new Date(mk + "-01T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+const shortDate = (ds) => {
+  if (ds === today()) return "Today";
+  if (ds === dstr(new Date(Date.now() - 86400000))) return "Yesterday";
+  return new Date(ds + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+};
+
+/* ---------- money ---------- */
+const money = (n) => (S.settings.hideBalances ? S.settings.currency + "••••" : S.settings.currency + Math.round(Math.abs(n || 0)).toLocaleString("en-US"));
+const signed = (n) => (S.settings.hideBalances ? money(n) : (n < 0 ? "−" : "") + money(n));
+
+/* ---------- chart palette (the only colour in the app) ---------- */
+const PALETTE = ["#F5A524", "#3BC9DB", "#B6E34D", "#F06595", "#9775FA", "#FF922B", "#4DABF7", "#63E6BE", "#E8590C", "#C0EB75", "#DA77F2", "#74C0FC"];
+const hueFor = (key) => {
+  let h = 0;
+  const s = String(key);
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return PALETTE[h % PALETTE.length];
+};
+
+/* ---------- what money can do ---------- */
+const KIND = {
+  expense:  { label: "Spent",    verb: "Spent",           sign: "-", glyph: "−", people: false, cat: true  },
+  income:   { label: "Income",   verb: "Received",        sign: "+", glyph: "+", people: false, cat: false },
+  save:     { label: "Save",     verb: "Saved",           sign: "0", glyph: "↑", people: false, cat: false },
+  move:     { label: "Move",     verb: "Moved",           sign: "0", glyph: "⇄", people: false, cat: false },
+  lend:     { label: "Lent",     verb: "Lent out",        sign: "-", glyph: "→", people: true,  cat: false, debt: "in"  },
+  borrow:   { label: "Borrowed", verb: "Borrowed",        sign: "+", glyph: "←", people: true,  cat: false, debt: "out" },
+  borrow_own:{ label: "Borrow (own savings)", verb: "Borrowed from savings", sign: "+", glyph: "↺", people: false, cat: false, debt: "out" },
+  give:     { label: "Gave",     verb: "Gave",            sign: "-", glyph: "♥", people: true,  cat: true  },
+  repay_in: { label: "Paid back to me", verb: "Paid back to me", sign: "+", glyph: "✓", people: true, cat: false },
+  repay_out:{ label: "I paid back",     verb: "I paid back",     sign: "-", glyph: "✓", people: true, cat: false },
+  repay_own:{ label: "Put back in savings", verb: "Put back in savings", sign: "-", glyph: "✓", people: false, cat: false },
+};
+const ADD_KINDS = ["expense", "income", "save", "move", "lend", "borrow", "borrow_own", "give"];
+const DEFAULT_CATS = ["Food", "Transport", "Data", "Bills", "Rent", "School", "Health", "Fun", "Other"];
+/* colour per kind — used on badges & amounts so movements read at a glance */
+const KIND_COLOR = {
+  expense: "#F06595", income: "#4ADE9C", save: "#4DABF7", move: "#A3A3A3",
+  lend: "#FF922B", borrow: "#F5A524", borrow_own: "#9775FA", give: "#F06595",
+  repay_in: "#4ADE9C", repay_out: "#FF922B", repay_own: "#9775FA",
+};
+
+/* ============================================================
+   STATE + STORAGE
+   ============================================================ */
+const KEY = "ledger.v2";
+let store = { ok: true, why: "" };
+
+const blank = () => ({
+  pots: [
+    { id: "p_salary", name: "Salary", kind: "account" },
+    { id: "p_gig",    name: "Side gig", kind: "account" },
+    { id: "p_cash",   name: "Cash", kind: "account" },
+  ],
+  entries: [],
+  expected: [],
+  notes: [],
+  recurring: [],
+  cats: DEFAULT_CATS.slice(),
+  settings: { currency: "₦", allowNegative: false, theme: "dark", hideBalances: false },
+});
+
+let S = blank();
+let UI = {
+  tab: "home",
+  month: monthOf(today()),
+  day: today(),
+  page: null,        // {name, arg} for full pages pushed over a tab
+  search: "",
+  filter: "all",
+  period: "month",
+  sheet: null,
+  toastTimer: null,
+  lastAdded: null,
+};
+
+function load() {
+  let raw = null;
+  try {
+    raw = localStorage.getItem(KEY);
+  } catch (e) {
+    store = { ok: false, why: "This browser won't let the page save data. Use Backup to keep a copy." };
+  }
+  if (raw) {
+    try {
+      const d = JSON.parse(raw);
+      S = Object.assign(blank(), d);
+      S.settings = Object.assign(blank().settings, d.settings || {});
+      if (!Array.isArray(S.cats) || !S.cats.length) S.cats = DEFAULT_CATS.slice();
+    } catch (e) {
+      store = { ok: false, why: "Saved data looked damaged, so it wasn't loaded. Restore from a backup." };
+    }
+  }
+}
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(S));
+    if (!store.ok && store.why.indexOf("damaged") === -1) store = { ok: true, why: "" };
+  } catch (e) {
+    store = { ok: false, why: "Ran out of room to save. Export a backup, then remove old entries." };
+  }
+}
+function applyTheme() {
+  const t = (S.settings && S.settings.theme) || "dark";
+  document.documentElement.setAttribute("data-theme", t);
+  const mc = document.querySelector('meta[name="theme-color"]');
+  if (mc) mc.setAttribute("content", t === "light" ? "#F7F4EE" : "#0A0A0A");
+}
+function toggleTheme() {
+  S.settings.theme = (S.settings.theme === "light") ? "dark" : "light";
+  save();
+  applyTheme();
+  render();
+}
+function toggleHide() {
+  S.settings.hideBalances = !S.settings.hideBalances;
+  save();
+  render();
+}
+
+/* ============================================================
+   MODEL — every entry moves money out of one pot and/or into another
+   ============================================================ */
+const pot = (id) => S.pots.find((p) => p.id === id) || null;
+const potName = (id) => (pot(id) ? pot(id).name : "—");
+const accounts = () => S.pots.filter((p) => p.kind === "account" && !p.archived);
+const goals = () => S.pots.filter((p) => p.kind === "goal" && !p.archived);
+
+function balances() {
+  const b = {};
+  S.pots.forEach((p) => (b[p.id] = 0));
+  S.entries.forEach((e) => {
+    if (e.from && b[e.from] !== undefined) b[e.from] -= e.amount;
+    if (e.to && b[e.to] !== undefined) b[e.to] += e.amount;
+  });
+  return b;
+}
+const balanceOf = (id) => balances()[id] || 0;
+const totalCash = () => sum(accounts().map((p) => balanceOf(p.id)));
+const totalSaved = () => sum(goals().map((p) => balanceOf(p.id)));
+
+/* debts */
+function debtRows() {
+  const out = [];
+  S.entries.forEach((e) => {
+    if (e.kind !== "lend" && e.kind !== "borrow" && e.kind !== "borrow_own") return;
+    const paid = sum(S.entries.filter((x) => x.linkedTo === e.id).map((x) => x.amount));
+    out.push({ e, paid, left: Math.max(0, e.amount - paid), settled: paid >= e.amount - 0.001 });
+  });
+  return out;
+}
+const owedToMe = () => sum(debtRows().filter((d) => d.e.kind === "lend").map((d) => d.left));
+const iOwe = () => sum(debtRows().filter((d) => d.e.kind === "borrow").map((d) => d.left));
+/* money borrowed out of a savings goal that hasn't gone back in yet */
+const selfLoanFor = (goalId) => sum(debtRows().filter((d) => d.e.kind === "borrow_own" && d.e.from === goalId && !d.settled).map((d) => d.left));
+const selfOwed = () => sum(debtRows().filter((d) => d.e.kind === "borrow_own").map((d) => d.left));
+
+/* people */
+function peopleList() {
+  const map = {};
+  S.entries.forEach((e) => {
+    if (!e.person) return;
+    const k = e.person.trim();
+    if (!k) return;
+    if (!map[k]) map[k] = { name: k, given: 0, lent: 0, borrowed: 0, backToMe: 0, iPaid: 0, count: 0 };
+    const m = map[k];
+    m.count++;
+    if (e.kind === "give") m.given += e.amount;
+    if (e.kind === "lend") m.lent += e.amount;
+    if (e.kind === "borrow") m.borrowed += e.amount;
+    if (e.kind === "repay_in") m.backToMe += e.amount;
+    if (e.kind === "repay_out") m.iPaid += e.amount;
+  });
+  const debts = debtRows();
+  return Object.values(map)
+    .map((m) => {
+      /* derived from debtRows so any repayment style (repay_out, or a "give"
+         flagged as paying back an old debt) is reflected accurately */
+      m.theyOwe = sum(debts.filter((d) => d.e.kind === "lend" && (d.e.person || "").trim() === m.name).map((d) => d.left));
+      m.iOwe = sum(debts.filter((d) => d.e.kind === "borrow" && (d.e.person || "").trim() === m.name).map((d) => d.left));
+      m.outflow = m.given + m.lent;
+      return m;
+    })
+    .sort((a, b) => b.theyOwe + b.iOwe - (a.theyOwe + a.iOwe) || b.outflow - a.outflow);
+}
+
+/* period filtering */
+function inPeriod(e) {
+  const p = UI.period;
+  if (p === "all") return true;
+  if (p === "today") return e.date === today();
+  if (p === "day") return e.date === UI.day;
+  if (p === "week") return daysBetween(e.date, today()) >= 0 && daysBetween(e.date, today()) <= 6;
+  return monthOf(e.date) === UI.month;
+}
+const periodWords = () => (UI.period === "all" ? "all time" : UI.period === "today" ? "today" : UI.period === "day" ? shortDate(UI.day) : UI.period === "week" ? "last 7 days" : monthName(UI.month));
+
+/* group into chart slices */
+function slices(entries, keyFn, colorFn) {
+  const m = {};
+  entries.forEach((e) => {
+    const k = keyFn(e) || "Other";
+    m[k] = (m[k] || 0) + e.amount;
+  });
+  const t = sum(Object.values(m));
+  return {
+    total: t,
+    items: Object.entries(m)
+      .map(([name, value]) => ({ name, value, pct: t ? (value / t) * 100 : 0, color: (colorFn || hueFor)(name) }))
+      .sort((a, b) => b.value - a.value),
+  };
+}
+
+/* month roll-up */
+function monthStats(mk) {
+  const es = S.entries.filter((e) => monthOf(e.date) === mk);
+  const by = (k) => sum(es.filter((e) => e.kind === k).map((e) => e.amount));
+  const inc = by("income"), spent = by("expense"), saved = by("save"), given = by("give"), lent = by("lend"), borrowed = by("borrow");
+  return { es, inc, spent, saved, given, lent, borrowed, out: spent + given + lent, left: inc + borrowed - spent - given - lent - saved };
+}
+
+/* recurring due */
+function dueRecurring() {
+  const t = new Date(), day = t.getDate(), mk = monthOf(today());
+  return S.recurring.filter((r) => r.active !== false && r.lastPosted !== mk && day >= (r.day || 1));
+}
+/* ============================================================
+   DONUT CHART — percentages sit inside the ring, names in the key
+   ============================================================ */
+function donut(pack, centreBig, centreSmall) {
+  const items = pack.items, total = pack.total;
+  if (!items.length || !total) return "";
+  const cx = 80, cy = 80, R = 74, r = 45, mid = (R + r) / 2;
+  const pol = (rad, a) => [cx + rad * Math.cos(a), cy + rad * Math.sin(a)];
+  let a0 = -Math.PI / 2, paths = "", labels = "";
+
+  if (items.length === 1) {
+    paths =
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + ((R + r) / 2) + '" fill="none" stroke="' + items[0].color + '" stroke-width="' + (R - r) + '"/>';
+    labels = '<text x="' + cx + '" y="' + (cy - mid + 4) + '" text-anchor="middle" class="slab">100%</text>';
+  } else {
+    items.forEach((it) => {
+      const a1 = a0 + (it.value / total) * Math.PI * 2;
+      const [x0, y0] = pol(R, a0), [x1, y1] = pol(R, a1), [x2, y2] = pol(r, a1), [x3, y3] = pol(r, a0);
+      const big = a1 - a0 > Math.PI ? 1 : 0;
+      paths +=
+        '<path d="M' + x0.toFixed(2) + ' ' + y0.toFixed(2) +
+        ' A' + R + ' ' + R + ' 0 ' + big + ' 1 ' + x1.toFixed(2) + ' ' + y1.toFixed(2) +
+        ' L' + x2.toFixed(2) + ' ' + y2.toFixed(2) +
+        ' A' + r + ' ' + r + ' 0 ' + big + ' 0 ' + x3.toFixed(2) + ' ' + y3.toFixed(2) +
+        ' Z" fill="' + it.color + '" stroke="var(--bg)" stroke-width="2"/>';
+      if (it.pct >= 8) {
+        const [lx, ly] = pol(mid, (a0 + a1) / 2);
+        labels += '<text x="' + lx.toFixed(1) + '" y="' + (ly + 3.4).toFixed(1) + '" text-anchor="middle" class="slab">' + Math.round(it.pct) + '%</text>';
+      }
+      a0 = a1;
+    });
+  }
+
+  const key = items
+    .map(
+      (it) =>
+        '<div class="row" style="gap:9px">' +
+        '<span class="swatch" style="background:' + it.color + '"></span>' +
+        '<span class="grow trunc" style="font-size:13.5px">' + esc(it.name) + '</span>' +
+        '<span class="num tiny dim" style="width:36px;text-align:right">' + (it.pct < 1 ? "<1" : Math.round(it.pct)) + "%</span>" +
+        '<span class="num" style="font-size:13px;font-weight:600;min-width:62px;text-align:right">' + money(it.value) + "</span>" +
+        "</div>"
+    )
+    .join("");
+
+  return (
+    '<div style="display:flex;justify-content:center;position:relative">' +
+    '<svg viewBox="0 0 160 160" width="182" height="182" role="img" aria-label="Breakdown chart">' +
+    '<style>.slab{font-family:var(--mono);font-size:10.5px;font-weight:700;fill:#0A0A0A}</style>' +
+    paths + labels +
+    (centreBig
+      ? '<text x="80" y="' + (centreSmall ? 78 : 84) + '" text-anchor="middle" style="font-family:var(--mono);font-size:15px;font-weight:700;fill:var(--ink);letter-spacing:-.5px">' + esc(centreBig) + "</text>"
+      : "") +
+    (centreSmall ? '<text x="80" y="93" text-anchor="middle" style="font-size:8.5px;fill:var(--ink3)">' + esc(centreSmall) + "</text>" : "") +
+    "</svg></div>" +
+    '<div class="stack" style="margin-top:14px;gap:9px">' + key + "</div>"
+  );
+}
+
+/* horizontal bars — used where a ring would be overkill */
+function bars(pack) {
+  if (!pack.items.length) return "";
+  const max = pack.items[0].value || 1;
+  return (
+    '<div class="stack" style="gap:11px">' +
+    pack.items
+      .map(
+        (it) =>
+          "<div>" +
+          '<div class="row" style="gap:8px;margin-bottom:5px">' +
+          '<span class="swatch" style="background:' + it.color + '"></span>' +
+          '<span class="grow trunc" style="font-size:13.5px">' + esc(it.name) + "</span>" +
+          '<span class="num tiny dim">' + Math.round(it.pct) + "%</span>" +
+          '<span class="num" style="font-size:13px;font-weight:600">' + money(it.value) + "</span>" +
+          "</div>" +
+          '<div class="track"><div class="fill" style="width:' + (it.value / max) * 100 + "%;background:" + it.color + '"></div></div>' +
+          "</div>"
+      )
+      .join("") +
+    "</div>"
+  );
+}
+
+/* ============================================================
+   TOAST + UNDO
+   ============================================================ */
+function toast(msg, undoLabel, undoFn) {
+  clearTimeout(UI.toastTimer);
+  window.__undo = undoFn || null;
+  $("#toast").innerHTML =
+    '<div class="t"><span class="grow">' + esc(msg) + "</span>" +
+    (undoFn ? '<button onclick="doUndo()">' + esc(undoLabel || "Undo") + "</button>" : "") +
+    "</div>";
+  UI.toastTimer = setTimeout(() => ($("#toast").innerHTML = ""), undoFn ? 6000 : 2600);
+}
+function doUndo() {
+  if (window.__undo) window.__undo();
+  window.__undo = null;
+  $("#toast").innerHTML = "";
+  save();
+  render();
+}
+
+/* ============================================================
+   SHEETS
+   ============================================================ */
+function openSheet(name, arg) {
+  UI.sheet = { name: name, arg: arg || {}, draft: null };
+  render();
+}
+function closeSheet() {
+  UI.sheet = null;
+  render();
+}
+
+/* ============================================================
+   WRITES
+   ============================================================ */
+function addEntry(e) {
+  const rec = Object.assign({ id: uid(), date: today(), createdAt: Date.now(), note: "", person: "", cat: "" }, e);
+  S.entries.unshift(rec);
+  save();
+  return rec;
+}
+function removeEntry(id) {
+  const i = S.entries.findIndex((x) => x.id === id);
+  if (i < 0) return;
+  const gone = S.entries[i];
+  const kids = S.entries.filter((x) => x.linkedTo === id);
+  S.entries = S.entries.filter((x) => x.id !== id && x.linkedTo !== id);
+  save();
+  toast("Deleted " + KIND[gone.kind].label.toLowerCase() + " " + money(gone.amount), "Undo", () => {
+    S.entries.splice(i, 0, gone);
+    kids.forEach((k) => S.entries.push(k));
+  });
+}
+function addPot(name, kind, target) {
+  const nm = (name || "").trim();
+  if (!nm) return null;
+  const found = S.pots.find((p) => p.name.toLowerCase() === nm.toLowerCase() && p.kind === kind);
+  if (found) {
+    found.archived = false;
+    save();
+    return found.id;
+  }
+  const p = { id: uid(), name: nm, kind: kind };
+  if (kind === "goal" && target > 0) p.target = target;
+  S.pots.push(p);
+  save();
+  return p.id;
+}
+function addCat(name) {
+  const nm = (name || "").trim();
+  if (!nm) return null;
+  if (!S.cats.some((c) => c.toLowerCase() === nm.toLowerCase())) {
+    S.cats.push(nm);
+    save();
+  }
+  return nm;
+}
+function postRecurring(r) {
+  addEntry({ kind: r.kind, amount: r.amount, from: r.from || null, to: r.to || null, cat: r.cat || "", person: r.person || "", note: r.note || "" });
+  r.lastPosted = monthOf(today());
+  save();
+  render();
+  toast(KIND[r.kind].verb + " " + money(r.amount) + " logged");
+}
+function skipRecurring(r) {
+  r.lastPosted = monthOf(today());
+  save();
+  render();
+  toast("Skipped this month");
+}
+/* ============================================================
+   ENTRY SHEET — one form for adding and editing
+   ============================================================ */
+function draft() {
+  return UI.sheet.draft;
+}
+function syncDraft() {
+  const d = draft();
+  if (!d) return;
+  const g = (id) => {
+    const el = document.getElementById(id);
+    return el ? el.value : undefined;
+  };
+  const a = g("f_amount"); if (a !== undefined) d.amount = a;
+  const n = g("f_note");   if (n !== undefined) d.note = n;
+  const p = g("f_person"); if (p !== undefined) d.person = p;
+  const dt = g("f_date");  if (dt !== undefined && dt) d.date = dt;
+  const du = g("f_due");   if (du !== undefined) d.due = du;
+  const oa = g("f_opening"); if (oa !== undefined) d.openingAmount = oa;
+}
+function setD(k, v) {
+  syncDraft();
+  const d = draft();
+  d[k] = v;
+  if (k === "kind") {
+    const K = KIND[v];
+    if (!K.people) d.person = "";
+    if (!K.cat) d.cat = "";
+    if (v === "income" || v === "borrow") { d.to = d.to || firstAccount(); d.from = null; }
+    else if (v === "borrow_own") { d.from = d.from || (goals()[0] || {}).id || null; d.to = d.to || firstAccount(); }
+    else if (v === "save") { d.from = d.from || firstAccount(); d.to = goals().length ? d.to : null; }
+    else if (v === "move") { /* keep both */ }
+    else { d.from = d.from || firstAccount(); d.to = null; }
+    if (v !== "lend" && v !== "borrow" && v !== "borrow_own") d.due = "";
+    if (v !== "give") d.debtMode = false;
+    if (v === "borrow_own") d.borrowFor = d.borrowFor || "self"; else d.borrowFor = "self";
+  }
+  if (k === "from" && d.kind === "move" && d.to === v) d.to = null;
+  if (k === "to" && d.kind === "move" && d.from === v) d.from = null;
+  render();
+}
+const firstAccount = () => {
+  const b = balances();
+  const list = accounts().slice().sort((x, y) => b[y.id] - b[x.id]);
+  return list.length ? list[0].id : null;
+};
+
+/* which pots can appear on each side */
+const LANDS_IN = ["income", "borrow", "repay_in"];
+function fromChoices(kind) {
+  if (kind === "move") return S.pots.filter((p) => !p.archived);
+  if (kind === "borrow_own") return goals();
+  if (LANDS_IN.indexOf(kind) >= 0) return [];
+  return accounts();
+}
+function toChoices(kind, fromId) {
+  if (kind === "save") return goals();
+  if (kind === "move") return S.pots.filter((p) => !p.archived && p.id !== fromId);
+  if (kind === "borrow_own") return accounts();
+  if (LANDS_IN.indexOf(kind) >= 0) return accounts();
+  return [];
+}
+
+function potChips(list, selected, field, showBalance) {
+  const b = balances();
+  const sorted = list.slice().sort((x, y) => {
+    const ex = (b[x.id] || 0) <= 0, ey = (b[y.id] || 0) <= 0;
+    if (ex !== ey) return ex ? 1 : -1;
+    return 0;
+  });
+  return (
+    '<div class="wrap">' +
+    sorted
+      .map((p) => {
+        const bal = b[p.id] || 0;
+        const empty = showBalance && bal <= 0;
+        return (
+          '<button type="button" class="chip" aria-pressed="' + (selected === p.id) + '"' +
+          (empty ? ' data-locked="true"' : "") +
+          ' onclick="setD(\'' + field + "','" + p.id + "')\">" +
+          esc(p.name) +
+          (showBalance ? '<span class="bal">' + (bal < 0 ? "−" : "") + money(bal) + "</span>" : "") +
+          "</button>"
+        );
+      })
+      .join("") +
+    '<button type="button" class="chip add" onclick="openNamer(\'' + field + "','" +
+      (field === "to" && draft().kind === "save" ? "goal" : "account") + "')\">+ New</button>" +
+    "</div>"
+  );
+}
+
+function openNamer(field, kind) {
+  syncDraft();
+  UI.sheet.namer = { field: field, kind: kind };
+  render();
+}
+function commitNamer() {
+  const nm = document.getElementById("n_name").value;
+  const tgEl = document.getElementById("n_target");
+  const tg = tgEl ? parseFloat(tgEl.value) : 0;
+  const kind = UI.sheet.namer.kind;
+  const field = UI.sheet.namer.field;
+  const id = addPot(nm, kind, tg);
+  UI.sheet.namer = null;
+  if (id) { draft()[field] = id; }
+  render();
+}
+
+function entrySheet() {
+  const d = draft(), K = KIND[d.kind];
+  const amt = parseFloat(d.amount) || 0;
+  const froms = fromChoices(d.kind), tos = toChoices(d.kind, d.from);
+  const b = balances();
+  const editing = !!d.id;
+
+  /* balance guard — never blocks, only tells the truth */
+  let guard = "";
+  if (d.from && amt > 0) {
+    const bal = b[d.from] || 0;
+    const canSuggestAlt = d.kind !== "borrow_own" && d.kind !== "move";
+    if (bal <= 0) {
+      const alt = canSuggestAlt ? accounts().filter((p) => p.id !== d.from && (b[p.id] || 0) >= amt).sort((x, y) => b[y.id] - b[x.id])[0] : null;
+      guard =
+        '<div class="alert"><b>' + esc(potName(d.from)) + " has nothing in it.</b> Logging this puts it at " +
+        signed(bal - amt) + "." +
+        (alt ? ' <button class="btn sm ghost" style="margin-top:9px" onclick="setD(\'from\',\'' + alt.id + '\')">Use ' + esc(alt.name) + " (" + money(b[alt.id]) + ") instead</button>" : "") +
+        "</div>";
+    } else if (bal < amt) {
+      guard =
+        '<div class="alert">' + esc(potName(d.from)) + " holds " + money(bal) + ". This is " + money(amt - bal) +
+        " more than that, so it goes to " + signed(bal - amt) + ".</div>";
+    }
+  }
+
+  const needPerson = K.people;
+
+  /* borrowing from a goal — show what's available, and let it go straight to someone if that's the plan */
+  let borrowSection = "", borrowOk = true;
+  if (!editing && d.kind === "borrow_own") {
+    const avail = b[d.from] || 0;
+    borrowSection =
+      '<div class="mini dim" style="margin:-8px 0 10px">Available in this goal: <b style="color:var(--ink)">' + money(avail) + "</b></div>" +
+      '<div class="note" style="margin:-4px 0 12px">This counts as a debt to yourself — it shows under Open loans until you put it back.</div>' +
+      '<div class="field"><div class="label">Who is this for?</div><div class="wrap">' +
+      '<button type="button" class="chip" aria-pressed="' + (d.borrowFor !== "person") + '" onclick="setD(\'borrowFor\',\'self\')">Myself</button>' +
+      '<button type="button" class="chip" aria-pressed="' + (d.borrowFor === "person") + '" onclick="setD(\'borrowFor\',\'person\')">Someone else</button>' +
+      "</div></div>";
+    if (d.borrowFor === "person") {
+      borrowSection +=
+        '<div class="field"><div class="label">Who\'s it for?</div>' +
+        '<input id="f_person" value="' + esc(d.person) + '" placeholder="Name" list="peoplelist" oninput="syncDraft()">' +
+        '<datalist id="peoplelist">' + peopleList().map((p) => "<option>" + esc(p.name) + "</option>").join("") + "</datalist></div>" +
+        '<div class="note" style="margin-top:-6px">It\'ll land in ' + esc(potName(d.to)) + " first, then go straight out to them — both steps logged together.</div>";
+      if (!(d.person || "").trim()) borrowOk = false;
+    }
+  }
+
+  /* "give" can double as paying back money you already owed someone before this app existed */
+  let debtGiveSection = "", debtOk = true;
+  if (!editing && d.kind === "give") {
+    const person = (d.person || "").trim();
+    const existingOpen = person ? debtRows().find((dr) => dr.e.kind === "borrow" && dr.e.opening && (dr.e.person || "").trim() === person && !dr.settled) : null;
+    debtGiveSection =
+      '<div class="field"><div class="label">Why are you giving this?</div><div class="wrap">' +
+      '<button type="button" class="chip" aria-pressed="' + !d.debtMode + '" onclick="setD(\'debtMode\',false)">Just giving</button>' +
+      '<button type="button" class="chip" aria-pressed="' + !!d.debtMode + '" onclick="setD(\'debtMode\',true)">Paying back what I owed</button>' +
+      "</div></div>";
+    if (d.debtMode) {
+      if (existingOpen) {
+        debtGiveSection += '<div class="alert">You owe ' + esc(person || "them") + " " + money(existingOpen.left) + " from before. This payment will count against that, leaving " + money(Math.max(0, existingOpen.left - amt)) + ".</div>";
+      } else {
+        debtGiveSection +=
+          '<div class="field"><div class="label">How much did you owe them in total, before this app?</div>' +
+          '<input id="f_opening" type="number" inputmode="decimal" step="any" value="' + esc(d.openingAmount || "") + '" placeholder="' + S.settings.currency + '0" oninput="syncDraft()" onchange="render()"></div>';
+        if (!(parseFloat(d.openingAmount) > 0)) debtOk = false;
+      }
+    }
+  }
+
+  const valid = amt > 0 && (!froms.length || d.from) && (!tos.length || d.to) && (!needPerson || (d.person || "").trim()) && debtOk && borrowOk;
+
+  const kindRow = editing
+    ? ""
+    : '<div class="wrap" style="margin-bottom:14px">' +
+      ADD_KINDS.map(
+        (k) =>
+          '<button type="button" class="chip" aria-pressed="' + (d.kind === k) + '" onclick="setD(\'kind\',\'' + k + "')\">" + KIND[k].label + "</button>"
+      ).join("") +
+      "</div>";
+
+  const catRow = K.cat
+    ? '<div class="field"><div class="label">What for?</div><div class="wrap">' +
+      S.cats.map((c) => '<button type="button" class="chip" aria-pressed="' + (d.cat === c) + '" onclick="setD(\'cat\',\'' + jsq(c) + "')\">" + esc(c) + "</button>").join("") +
+      '<button type="button" class="chip add" onclick="openCatNamer()">+ New</button></div></div>'
+    : "";
+
+  const namer = UI.sheet.namer
+    ? '<div class="alert"><div class="label">' + (UI.sheet.namer.kind === "goal" ? "New savings goal" : "New source of money") + "</div>" +
+      '<input id="n_name" placeholder="' + (UI.sheet.namer.kind === "goal" ? "e.g. New phone" : "e.g. Freelance") + '" style="margin-bottom:8px">' +
+      (UI.sheet.namer.kind === "goal" ? '<input id="n_target" type="number" inputmode="decimal" placeholder="Target amount (optional)" style="margin-bottom:8px">' : "") +
+      '<div class="row"><button class="btn sm" onclick="commitNamer()">Add</button>' +
+      '<button class="btn sm ghost" onclick="UI.sheet.namer=null;render()">Cancel</button></div></div>'
+    : "";
+
+  return (
+    '<div class="row" style="justify-content:space-between;margin-bottom:6px">' +
+    "<h2>" + (editing ? "Edit entry" : "Add money movement") + "</h2>" +
+    '<button class="ico" onclick="closeSheet()" aria-label="Close">' + icon("x") + "</button></div>" +
+    kindRow +
+    '<input id="f_amount" class="bigamt" type="number" inputmode="decimal" step="any" value="' + esc(d.amount) + '" placeholder="' + S.settings.currency + '0" oninput="syncDraft()" onchange="render()">' +
+    (froms.length ? '<div class="field"><div class="label">' + (d.kind === "move" ? "Take it out of" : d.kind === "borrow_own" ? "Which savings goal" : "Money leaves") + "</div>" + potChips(froms, d.from, "from", true) + "</div>" : "") +
+    (tos.length ? '<div class="field"><div class="label">' + (d.kind === "save" ? "Into which goal" : d.kind === "move" ? "Put it into" : d.kind === "borrow_own" ? "Goes into" : "Money lands in") + "</div>" + potChips(tos, d.to, "to", d.kind === "move") + "</div>" : "") +
+    (d.kind === "repay_own" ? '<div class="alert">Going back into <b>' + esc(potName(d.to)) + "</b> — the goal it came from.</div>" : "") +
+    borrowSection +
+    namer +
+    guard +
+    catRow +
+    (needPerson
+      ? '<div class="field"><div class="label">' + (d.kind === "lend" ? "Who took it?" : d.kind === "borrow" ? "Who did you borrow from?" : "Who is it for?") + "</div>" +
+        '<input id="f_person" value="' + esc(d.person) + '" placeholder="Name" list="peoplelist" oninput="syncDraft()">' +
+        '<datalist id="peoplelist">' + peopleList().map((p) => "<option>" + esc(p.name) + "</option>").join("") + "</datalist></div>"
+      : "") +
+    debtGiveSection +
+    (d.kind === "lend" || d.kind === "borrow" || d.kind === "borrow_own"
+      ? '<div class="field"><div class="label">Expected back by (optional)</div><input id="f_due" type="date" value="' + esc(d.due || "") + '" oninput="syncDraft()"></div>'
+      : "") +
+    '<div class="field"><div class="label">Note (optional)</div><input id="f_note" value="' + esc(d.note) + '" placeholder="' + (K.cat ? "e.g. rice and stew" : "What was this about?") + '" oninput="syncDraft()"></div>' +
+    '<div class="field"><div class="label">Date</div><input id="f_date" type="date" value="' + esc(d.date) + '" max="' + today() + '" oninput="syncDraft()"></div>' +
+    '<button class="btn" onclick="submitEntry()"' + (valid ? "" : " disabled") + ">" +
+      (editing ? "Save changes" : guard ? "Log it anyway" : "Log " + K.verb.toLowerCase()) + "</button>" +
+    (editing
+      ? '<button class="btn danger" style="margin-top:10px" onclick="confirmDelete(\'' + d.id + '\')">Delete this entry</button>'
+      : "") +
+    (!editing && d.kind === "expense" ? '<div class="note center" style="margin-top:10px">Tip: hold this app on your home screen and log spending the moment it happens.</div>' : "")
+  );
+}
+function openCatNamer() {
+  syncDraft();
+  const nm = prompt("New category name");
+  if (nm) { addCat(nm); draft().cat = nm.trim(); }
+  render();
+}
+
+function submitEntry() {
+  syncDraft();
+  const d = draft();
+  const amt = parseFloat(d.amount);
+  if (!(amt > 0)) return;
+
+  let linkedTo = d.linkedTo || null;
+  if (!d.id && d.kind === "give" && d.debtMode) {
+    const person = (d.person || "").trim();
+    const existingOpen = person ? debtRows().find((dr) => dr.e.kind === "borrow" && dr.e.opening && (dr.e.person || "").trim() === person && !dr.settled) : null;
+    if (existingOpen) {
+      linkedTo = existingOpen.e.id;
+    } else {
+      const oa = parseFloat(d.openingAmount);
+      if (oa > 0) {
+        const rec = addEntry({ kind: "borrow", amount: oa, from: null, to: null, cat: "", person: person, note: "Owed before using this app", date: d.date || today(), due: "", linkedTo: null, opening: true });
+        linkedTo = rec.id;
+      }
+    }
+  }
+
+  const payload = {
+    kind: d.kind, amount: amt, from: d.from || null, to: d.to || null,
+    cat: KIND[d.kind].cat ? d.cat || "Other" : "",
+    person: d.kind === "borrow_own" ? "" : (d.person || "").trim(),
+    note: (d.note || "").trim(), date: d.date || today(), due: d.due || "",
+    linkedTo: linkedTo,
+  };
+  if (d.id) {
+    const e = S.entries.find((x) => x.id === d.id);
+    const before = Object.assign({}, e);
+    Object.assign(e, payload);
+    save();
+    closeSheet();
+    toast("Entry updated", "Undo", () => Object.assign(S.entries.find((x) => x.id === before.id), before));
+  } else {
+    const rec = addEntry(payload);
+    let rec2 = null;
+    if (d.kind === "borrow_own" && d.borrowFor === "person" && (d.person || "").trim()) {
+      rec2 = addEntry({
+        kind: "give", amount: amt, from: d.to || null, to: null, cat: "Other",
+        person: (d.person || "").trim(),
+        note: "From a savings loan" + ((d.note || "").trim() ? " — " + (d.note || "").trim() : ""),
+        date: d.date || today(), due: "", linkedTo: null,
+      });
+    }
+    if (d.expectedId) {
+      const x = S.expected.find((q) => q.id === d.expectedId);
+      if (x) { x.done = true; x.gotOn = rec.date; }
+      save();
+    }
+    closeSheet();
+    toast(
+      rec2 ? "Borrowed " + money(rec.amount) + " and gave it to " + rec2.person : KIND[rec.kind].verb + " " + money(rec.amount) + " logged",
+      "Undo",
+      () => {
+        S.entries = S.entries.filter((x) => x.id !== rec.id && (!rec2 || x.id !== rec2.id));
+        if (d.expectedId) { const x = S.expected.find((q) => q.id === d.expectedId); if (x) { x.done = false; } }
+      }
+    );
+  }
+}
+
+function confirmDelete(id) {
+  UI.sheet = { name: "confirmDelete", arg: { id: id } };
+  render();
+}
+function confirmDeleteSheet() {
+  const e = S.entries.find((x) => x.id === UI.sheet.arg.id);
+  if (!e) return "<p>Already gone.</p>";
+  const kids = S.entries.filter((x) => x.linkedTo === e.id).length;
+  return (
+    "<h2>Delete this entry?</h2>" +
+    '<p class="muted" style="font-size:13.5px">' + KIND[e.kind].verb + " " + money(e.amount) +
+    (e.person ? " · " + esc(e.person) : "") + " on " + esc(e.date) + "." +
+    (kids ? " " + kids + " repayment" + (kids > 1 ? "s" : "") + " logged against it will go too." : "") +
+    " Your balances will change.</p>" +
+    '<button class="btn danger" onclick="removeEntry(\'' + e.id + "');closeSheet()\">Delete it</button>" +
+    '<button class="btn ghost" style="margin-top:10px" onclick="openEdit(\'' + e.id + '\')">Keep it — go back to editing</button>'
+  );
+}
+function openEdit(id) {
+  const e = S.entries.find((x) => x.id === id);
+  if (!e) return;
+  UI.sheet = {
+    name: "entry",
+    arg: {},
+    draft: {
+      id: e.id, kind: e.kind, amount: String(e.amount), from: e.from, to: e.to, cat: e.cat,
+      person: e.person, note: e.note, date: e.date, due: e.due || "", linkedTo: e.linkedTo || null,
+    },
+  };
+  render();
+}
+function openAdd(kind, pre) {
+  const k = kind || "expense";
+  UI.sheet = {
+    name: "entry",
+    arg: {},
+    draft: Object.assign(
+      {
+        id: null, kind: k, amount: "",
+        from: k === "borrow_own" ? (goals()[0] || {}).id || null : (KIND[k].people || k === "expense" || k === "save" || k === "move" ? firstAccount() : null),
+        to: k === "income" || k === "borrow" || k === "borrow_own" ? firstAccount() : k === "save" ? (goals()[0] || {}).id || null : null,
+        cat: KIND[k].cat ? S.cats[0] : "", person: "", note: "", date: today(), due: "", linkedTo: null, debtMode: false, openingAmount: "", borrowFor: "self",
+      },
+      pre || {}
+    ),
+  };
+  if (k === "income" || k === "borrow") UI.sheet.draft.from = null;
+  render();
+}
+
+/* repayment sheet — logging money coming back on a loan, or back into a savings goal you borrowed from */
+function openRepay(debtId) {
+  const e = S.entries.find((x) => x.id === debtId);
+  if (!e) return;
+  if (e.kind === "borrow_own") {
+    openAdd("repay_own", {
+      kind: "repay_own",
+      linkedTo: e.id,
+      from: firstAccount(),
+      to: e.from,
+      note: "Paid back into " + potName(e.from),
+    });
+    return;
+  }
+  const isLend = e.kind === "lend";
+  openAdd(isLend ? "repay_in" : "repay_out", {
+    kind: isLend ? "repay_in" : "repay_out",
+    person: e.person,
+    linkedTo: e.id,
+    from: isLend ? null : firstAccount(),
+    to: isLend ? firstAccount() : null,
+    note: (isLend ? "Payback from " : "Paid back to ") + e.person,
+  });
+}
+/* ============================================================
+   ICONS
+   ============================================================ */
+const ICONS = {
+  home: '<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  people: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.5a3 3 0 0 1 0 5.6"/><path d="M18 20c0-2.3-.8-4-2-5"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chart: '<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M12 3a9 9 0 0 1 9 9"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 8h7M9 12h7"/>',
+  note: '<path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h4"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  left: '<path d="M14 6l-6 6 6 6"/>',
+  right: '<path d="M10 6l6 6-6 6"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+  down: '<path d="M12 4v12M7 12l5 5 5-5M5 20h14"/>',
+  up: '<path d="M12 20V8M7 12l5-5 5 5M5 4h14"/>',
+  check: '<path d="M5 13l4 4L19 7"/>',
+  bell: '<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 6 1.5 6h-15S6 13 6 9z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+  wallet: '<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M16 12.5h2"/>',
+  sun: '<circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.4 4.4l1.7 1.7M17.9 17.9l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.4 19.6l1.7-1.7M17.9 6.1l1.7-1.7"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a17.9 17.9 0 0 1-3.5 4.5M6.5 6.5C3.8 8.2 2 12 2 12s3.5 7 10 7a10.4 10.4 0 0 0 3.9-.75"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>',
+};
+function icon(n, size) {
+  return (
+    '<svg width="' + (size || 20) + '" height="' + (size || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    (ICONS[n] || "") + "</svg>"
+  );
+}
+
+/* ============================================================
+   SHARED PIECES
+   ============================================================ */
+function card(title, eyebrowText, body, action, cls) {
+  return (
+    '<div class="card ' + (cls || "") + '">' +
+    (title || eyebrowText || action
+      ? '<div class="chead"><div>' +
+        (eyebrowText ? '<div class="eyebrow">' + esc(eyebrowText) + "</div>" : "") +
+        (title ? "<h2>" + esc(title) + "</h2>" : "") +
+        "</div>" + (action || "") + "</div>"
+      : "") +
+    body +
+    "</div>"
+  );
+}
+
+function entryRow(e, opts) {
+  opts = opts || {};
+  const K = KIND[e.kind];
+  const bits = [];
+  if (e.cat) bits.push(e.cat);
+  if (e.person && !opts.hidePerson) bits.push(e.person);
+  if (e.from && e.to) bits.push(potName(e.from) + " → " + potName(e.to));
+  else if (e.from) bits.push(potName(e.from));
+  else if (e.to) bits.push(potName(e.to));
+  if (e.note) bits.push(e.note);
+  const title = e.note && !e.cat && !e.person ? e.note : e.person || e.cat || (e.to && e.kind === "save" ? potName(e.to) : K.verb);
+  const d = debtRows().find((x) => x.e.id === e.id);
+  const dl = e.due ? daysLeft(e.due) : null;
+
+  const kc = KIND_COLOR[e.kind] || "var(--ink3)";
+  return (
+    '<button class="item" onclick="openEdit(\'' + e.id + '\')">' +
+    '<span class="badge" style="color:' + kc + ';border-color:' + kc + '">' + K.glyph + "</span>" +
+    '<span class="grow">' +
+      '<span class="row" style="gap:6px"><span class="trunc" style="font-weight:600;font-size:14.5px">' + esc(title) + "</span>" +
+      (d && !d.settled ? '<span class="pill' + (dl != null && dl < 0 ? " hot" : "") + '">' + (dl == null ? "open" : dl < 0 ? Math.abs(dl) + "d late" : dl + "d left") + "</span>" : "") +
+      (d && d.settled ? '<span class="pill good">settled</span>' : "") +
+      "</span>" +
+      '<span class="tiny dim trunc" style="display:block">' + esc(bits.join(" · ")) + (opts.showDate === false ? "" : " · " + shortDate(e.date)) + "</span>" +
+      (d && !d.settled && d.paid > 0 ? '<span class="mini dim num" style="display:block;margin-top:2px">' + money(d.paid) + " back, " + money(d.left) + " to go</span>" : "") +
+    "</span>" +
+    '<span style="text-align:right;flex:0 0 auto">' +
+      '<span class="amt" style="color:' + (K.sign === "+" ? "var(--good)" : K.sign === "-" ? "var(--bad)" : "var(--ink3)") + '">' +
+      (K.sign === "+" ? "+" : K.sign === "-" ? "−" : "") + money(e.amount) + "</span>" +
+    "</span>" +
+    "</button>"
+  );
+}
+
+function entryList(list, opts) {
+  if (!list.length) return '<div class="empty">Nothing here yet.</div>';
+  return '<div>' + list.map((e) => entryRow(e, opts)).join("") + "</div>";
+}
+
+const shiftDay = (ds, d) => dstr(new Date(new Date(ds + "T00:00:00").getTime() + d * 86400000));
+function periodBar() {
+  const opts = [["today", "Today"], ["day", "Pick a day"], ["week", "7 days"], ["month", "Month"], ["all", "All"]];
+  return (
+    '<div class="seg" style="margin-bottom:12px">' +
+    opts.map(([k, l]) => '<button aria-pressed="' + (UI.period === k) + '" onclick="UI.period=\'' + k + (k === "day" ? "';UI.day=UI.day||today();render()" : "';render()") + '">' + l + "</button>").join("") +
+    "</div>" +
+    (UI.period === "month" ? monthBar() : "") +
+    (UI.period === "day" ? dayBar() : "")
+  );
+}
+function monthBar() {
+  const cur = monthOf(today());
+  const isCur = UI.month === cur;
+  return (
+    '<div class="row" style="justify-content:space-between;margin-bottom:12px">' +
+    '<button class="ico" onclick="UI.month=shiftMonth(UI.month,-1);render()" aria-label="Previous month">' + icon("left") + "</button>" +
+    '<div style="font-weight:640;font-size:15px">' + monthName(UI.month) + "</div>" +
+    '<button class="ico" onclick="UI.month=shiftMonth(UI.month,1);render()" ' + (isCur ? 'style="opacity:.3" disabled' : "") + ' aria-label="Next month">' + icon("right") + "</button>" +
+    "</div>"
+  );
+}
+function dayBar() {
+  const isCur = UI.day === today();
+  return (
+    '<div class="row" style="justify-content:space-between;margin-bottom:12px;gap:8px">' +
+    '<button class="ico" onclick="UI.day=shiftDay(UI.day,-1);render()" aria-label="Previous day">' + icon("left") + "</button>" +
+    '<div class="grow" style="position:relative;text-align:center">' +
+    '<div style="font-weight:640;font-size:15px;pointer-events:none">' + esc(shortDate(UI.day)) + " " + new Date(UI.day + "T00:00:00").getFullYear() + "</div>" +
+    '<input type="date" value="' + esc(UI.day) + '" max="' + esc(today()) + '" onchange="UI.day=this.value||today();render()" style="position:absolute;inset:0;opacity:0;width:100%">' +
+    "</div>" +
+    '<button class="ico" onclick="UI.day=shiftDay(UI.day,1);render()" ' + (isCur ? 'style="opacity:.3" disabled' : "") + ' aria-label="Next day">' + icon("right") + "</button>" +
+    "</div>"
+  );
+}
+
+/* ============================================================
+   HOME
+   ============================================================ */
+function pageHome() {
+  const b = balances(), acc = accounts(), gls = goals();
+  const total = totalCash();
+  const st = monthStats(monthOf(today()));
+  const due = dueRecurring();
+  const debts = debtRows().filter((d) => !d.settled);
+  const late = debts.filter((d) => d.e.due && daysLeft(d.e.due) < 0);
+  const soon = debts.filter((d) => d.e.due && daysLeft(d.e.due) >= 0 && daysLeft(d.e.due) <= 7);
+  const exp = S.expected.filter((x) => !x.done);
+  const expTotal = sum(exp.map((x) => parseFloat(x.amount) || 0));
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">' + esc(new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })) + "</div><h1>Your money</h1></div>" +
+    '<div class="row" style="gap:8px;flex:0 0 auto">' +
+    '<button class="ico" onclick="toggleHide()" aria-label="Hide balances">' + icon(S.settings.hideBalances ? "eyeOff" : "eye") + "</button>" +
+    '<button class="ico" onclick="toggleTheme()" aria-label="Toggle light/dark">' + icon(S.settings.theme === "light" ? "moon" : "sun") + "</button>" +
+    '<button class="ico" onclick="go(\'settings\')" aria-label="Settings">' + icon("gear") + "</button>" +
+    "</div></div>";
+
+  if (!store.ok) out += '<div class="card" style="border-color:var(--bad)"><div class="row" style="gap:9px;align-items:flex-start">' + icon("bell") + '<div class="tiny">' + esc(store.why) + "</div></div></div>";
+
+  /* the receipt */
+  out +=
+    '<div class="card torn"><div class="eyebrow">Cash on hand</div>' +
+    '<div class="num" style="font-size:36px;font-weight:650;letter-spacing:-.04em;margin:6px 0 2px;color:' + (total < 0 ? "var(--bad)" : "var(--ink)") + '">' + signed(total) + "</div>" +
+    '<div class="tiny dim" style="margin-bottom:14px">across ' + acc.length + " source" + (acc.length === 1 ? "" : "s") + (totalSaved() ? " · " + money(totalSaved()) + " put away in goals" : "") + "</div>" +
+    acc
+      .map(
+        (p) =>
+          '<button class="row" style="width:100%;padding:7px 0;text-align:left" onclick="go(\'pot\',\'' + p.id + '\')">' +
+          '<span style="font-size:13.5px">' + esc(p.name) + "</span><span class=\"leader\"></span>" +
+          '<span class="num" style="font-size:13.5px;font-weight:600;color:' + ((b[p.id] || 0) <= 0 ? "var(--ink4)" : "var(--ink)") + '">' + signed(b[p.id] || 0) + "</span>" +
+          "</button>"
+      )
+      .join("") +
+    "</div>";
+
+  if (late.length || soon.length) {
+    out +=
+      '<button class="card" style="width:100%;text-align:left;border-color:' + (late.length ? "var(--bad)" : "var(--line2)") + '" onclick="UI.tab=\'people\';render()">' +
+      '<div class="row" style="gap:9px">' + icon("bell") +
+      '<div class="grow tiny">' +
+      (late.length ? "<b>" + late.length + " loan" + (late.length > 1 ? "s" : "") + " past the date</b>" : soon.length + " loan" + (soon.length > 1 ? "s" : "") + " due within a week") +
+      '<div class="dim mini">' + money(sum(debts.map((d) => d.left))) + " still moving between you and other people</div></div>" +
+      icon("right") + "</div></button>";
+  }
+
+  if (due.length) {
+    out += card(
+      "Monthly things due",
+      "Repeats",
+      due
+        .map(
+          (r) =>
+            '<div class="item" style="cursor:default">' +
+            '<span class="badge">' + KIND[r.kind].glyph + "</span>" +
+            '<span class="grow"><span style="font-weight:600;font-size:14px">' + esc(r.name || r.cat || KIND[r.kind].label) + "</span>" +
+            '<span class="tiny dim" style="display:block">' + KIND[r.kind].verb + " · " + (r.from ? potName(r.from) : potName(r.to)) + " · day " + (r.day || 1) + "</span></span>" +
+            '<span style="text-align:right"><span class="amt">' + money(r.amount) + "</span>" +
+            '<span style="display:flex;gap:6px;margin-top:6px">' +
+            '<button class="btn sm" onclick="postRecurring(S.recurring.find(x=>x.id===\'' + r.id + '\'))">Log</button>' +
+            '<button class="btn sm ghost" onclick="skipRecurring(S.recurring.find(x=>x.id===\'' + r.id + '\'))">Skip</button>' +
+            "</span></span></div>"
+        )
+        .join("")
+    );
+  }
+
+  /* month summary */
+  out += card(
+    "This month",
+    monthName(monthOf(today())),
+    '<div class="stack" style="gap:9px">' +
+      moneyLine("Money in", st.inc + st.borrowed, "+") +
+      moneyLine("Spent", st.spent, "−") +
+      (st.given ? moneyLine("Given away", st.given, "−") : "") +
+      (st.lent ? moneyLine("Lent out", st.lent, "−") : "") +
+      (st.saved ? moneyLine("Put into goals", st.saved, "−") : "") +
+      '<div style="border-top:1px solid var(--line);padding-top:9px">' +
+      moneyLine(st.left >= 0 ? "Still unspent" : "Overspent by", st.left, "", true) +
+      "</div>" +
+    "</div>" +
+    (st.spent ? '<button class="btn ghost sm" style="width:100%;margin-top:14px" onclick="UI.tab=\'charts\';UI.period=\'month\';render()">See where it went</button>' : "")
+  );
+
+  /* savings goals */
+  if (gls.length) {
+    out += card(
+      "Goals",
+      "Saving up",
+      gls
+        .map((g) => {
+          const have = b[g.id] || 0, t = g.target || 0, pct = t ? clamp(have / t, 0, 1) : 0;
+          const borrowed = selfLoanFor(g.id);
+          return (
+            '<button style="width:100%;text-align:left;margin-bottom:14px" onclick="go(\'pot\',\'' + g.id + '\')">' +
+            '<div class="row" style="margin-bottom:6px"><span class="grow" style="font-weight:600;font-size:14px">' + esc(g.name) + "</span>" +
+            '<span class="num tiny ' + (t && have >= t ? "" : "dim") + '">' + money(have) + (t ? " / " + money(t) : "") + "</span></div>" +
+            (t ? '<div class="track"><div class="fill" style="width:' + pct * 100 + '%"></div></div>' : "") +
+            (t && have >= t ? '<div class="mini" style="margin-top:5px">Target reached</div>' : "") +
+            (borrowed ? '<div class="mini" style="margin-top:5px;color:var(--warn)">' + money(borrowed) + " borrowed out, not put back</div>" : "") +
+            "</button>"
+          );
+        })
+        .join("") +
+        '<button class="btn ghost sm" style="width:100%" onclick="openAdd(\'save\')">Add to a goal</button>'
+    );
+  }
+
+  /* expected money teaser */
+  out += card(
+    "Money you're expecting",
+    "Coming in",
+    exp.length
+      ? '<div class="num" style="font-size:24px;font-weight:640;margin-bottom:4px">' + money(expTotal) + "</div>" +
+        '<div class="tiny dim" style="margin-bottom:12px">' + exp.length + " thing" + (exp.length > 1 ? "s" : "") + " you're waiting on · " + esc(exp.slice(0, 3).map((x) => x.what).join(", ")) + "</div>" +
+        '<button class="btn ghost sm" style="width:100%" onclick="go(\'plans\')">Open the list</button>'
+      : '<div class="empty"><b>Write down what you\'re owed.</b><br>Side gig payments, refunds, salary — so you know what\'s really coming.<br><button class="btn sm ghost" style="margin-top:12px" onclick="go(\'plans\')">Add something</button></div>'
+  );
+
+  out += card("", "", entryList(S.entries.slice(0, 5)), '<button class="btn sm ghost" onclick="UI.tab=\'book\';render()">See all</button>');
+  return out;
+}
+function moneyLine(label, val, sign, big) {
+  const amtColor = big ? (val < 0 ? "var(--bad)" : "var(--ink)") : sign === "+" ? "var(--good)" : sign === "−" ? "var(--bad)" : "var(--ink)";
+  return (
+    '<div class="row"><span style="font-size:' + (big ? "14px;font-weight:640" : "13.5px") + ';color:' + (big ? "var(--ink)" : "var(--ink2)") + '">' + esc(label) + "</span>" +
+    '<span class="leader"></span>' +
+    '<span class="num" style="font-size:' + (big ? "16px" : "13.5px") + ';font-weight:' + (big ? 700 : 600) + ';color:' + amtColor + '">' + (sign === "+" ? "+" : sign === "−" ? "−" : "") + money(val) + "</span></div>"
+  );
+}
+
+/* ---------- smooth line/area chart (crypto-app style) ---------- */
+function smoothPath(pts) {
+  if (pts.length < 2) return "";
+  let d = "M" + pts[0][0] + "," + pts[0][1];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i === 0 ? i : i - 1];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[i + 2 < pts.length ? i + 2 : i + 1];
+    const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+    const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+    d += "C" + c1x + "," + c1y + " " + c2x + "," + c2y + " " + p2[0] + "," + p2[1];
+  }
+  return d;
+}
+function sparkline(values, opts) {
+  opts = opts || {};
+  const w = opts.w || 320, h = opts.h || 120, color = opts.color || "var(--good)", pad = 8;
+  if (!values.length) return "";
+  if (values.length === 1) values = [values[0], values[0]];
+  const max = Math.max.apply(null, values), min = Math.min(0, Math.min.apply(null, values));
+  const span = (max - min) || 1;
+  const stepX = (w - pad * 2) / (values.length - 1);
+  const pts = values.map((v, i) => [pad + i * stepX, pad + (h - pad * 2) * (1 - (v - min) / span)]);
+  const linePath = smoothPath(pts);
+  const areaPath = linePath + "L" + pts[pts.length - 1][0] + "," + (h - pad) + "L" + pts[0][0] + "," + (h - pad) + "Z";
+  const last = pts[pts.length - 1];
+  const gid = "sg" + uid();
+  return (
+    '<svg viewBox="0 0 ' + w + " " + h + '" width="100%" height="' + h + '" preserveAspectRatio="none" style="display:block;overflow:visible">' +
+    '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.32"/>' +
+    '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/>' +
+    "</linearGradient></defs>" +
+    '<path d="' + areaPath + '" fill="url(#' + gid + ')" stroke="none"/>' +
+    '<path d="' + linePath + '" fill="none" stroke="' + color + '" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="7" fill="' + color + '" opacity="0.18"/>' +
+    '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="3" fill="' + color + '"/>' +
+    "</svg>"
+  );
+}
+
+/* ============================================================
+   CHARTS
+   ============================================================ */
+function pageCharts() {
+  const es = S.entries.filter(inPeriod);
+  const spent = es.filter((e) => e.kind === "expense");
+  const cameIn = es.filter((e) => e.kind === "income" || e.kind === "borrow" || e.kind === "repay_in");
+  const saved = es.filter((e) => e.kind === "save");
+  const toPeople = es.filter((e) => e.kind === "give" || e.kind === "lend");
+  const anyOut = es.filter((e) => ["expense", "give", "lend", "save"].indexOf(e.kind) >= 0);
+
+  let out = '<div class="top"><div><div class="eyebrow">Where it all goes</div><h1>Charts</h1></div></div>' + periodBar();
+
+  if (!es.length) {
+    return out + '<div class="empty" style="padding:40px 18px"><b>No movements in ' + esc(periodWords()) + ".</b><br>Log something and the charts fill themselves in.</div>";
+  }
+
+  if (spent.length) {
+    const p = slices(spent, (e) => e.cat || "Other");
+    out += card("What you spent on", "Spending · " + periodWords(), donut(p, money(p.total), "spent"));
+  }
+  if (anyOut.length) {
+    const p = slices(anyOut, (e) => KIND[e.kind].label, (n) => hueFor("t" + n));
+    out += card("How money left you", "Every outflow", bars(p));
+  }
+  if (cameIn.length) {
+    const p = slices(cameIn, (e) => potName(e.to));
+    out += card("Where money came in", "Income · " + periodWords(), donut(p, money(p.total), "in"));
+  }
+  if (saved.length) {
+    const p = slices(saved, (e) => potName(e.from));
+    out += card("What funded your savings", "Saving", donut(p, money(p.total), "saved") + '<div class="note" style="margin-top:12px">Which source the money you put away actually came out of.</div>');
+  }
+  if (saved.length && goals().length > 1) {
+    const p = slices(saved, (e) => potName(e.to));
+    out += card("Which goal got it", "Saving", bars(p));
+  }
+  if (toPeople.length) {
+    const p = slices(toPeople, (e) => e.person || "Someone");
+    out += card("Money to people", "Given & lent", donut(p, money(p.total), "out") + '<div class="note" style="margin-top:12px">Tap a name on the People tab for that person\'s own breakdown.</div>');
+  }
+  const byDay = {};
+  spent.forEach((e) => (byDay[e.date] = (byDay[e.date] || 0) + e.amount));
+  const days = Object.keys(byDay).sort();
+  if (days.length > 2) {
+    const max = Math.max.apply(null, Object.values(byDay));
+    out += card(
+      "Day by day",
+      "Spending rhythm",
+      sparkline(days.map((d) => byDay[d]), { color: "var(--bad)" }) +
+        '<div class="row mini dim" style="justify-content:space-between;margin-top:10px"><span>' + shortDate(days[0]) + "</span><span>Highest " + money(max) + "</span><span>" + shortDate(days[days.length - 1]) + "</span></div>"
+    );
+  }
+  return out;
+}
+/* ============================================================
+   PEOPLE
+   ============================================================ */
+function pagePeople() {
+  const ppl = peopleList();
+  const debts = debtRows().filter((d) => !d.settled).sort((a, b) => {
+    const da = a.e.due ? daysLeft(a.e.due) : 9999, db = b.e.due ? daysLeft(b.e.due) : 9999;
+    return da - db;
+  });
+  const settled = debtRows().filter((d) => d.settled);
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">Between you and others</div><h1>People</h1></div>' +
+    '<button class="ico" onclick="openAdd(\'lend\')" aria-label="Add loan">' + icon("plus") + "</button></div>";
+
+  out +=
+    '<div class="card"><div class="row" style="align-items:stretch;gap:0">' +
+    '<div style="flex:1"><div class="eyebrow">They owe you</div><div class="num" style="font-size:22px;font-weight:650;margin-top:3px">' + money(owedToMe()) + "</div></div>" +
+    '<div style="width:1px;background:var(--line);margin:0 14px"></div>' +
+    '<div style="flex:1"><div class="eyebrow">You owe</div><div class="num" style="font-size:22px;font-weight:650;margin-top:3px">' + money(iOwe()) + "</div></div>" +
+    "</div>" +
+    (owedToMe() - iOwe() !== 0
+      ? '<div class="tiny dim" style="margin-top:12px;border-top:1px solid var(--line);padding-top:10px">Net, you\'re ' +
+        (owedToMe() - iOwe() > 0 ? "up " + money(owedToMe() - iOwe()) + " once everyone pays" : "down " + money(iOwe() - owedToMe()) + " once you settle up") +
+        ".</div>"
+      : "") +
+    (selfOwed() ? '<div class="tiny dim" style="margin-top:8px' + (owedToMe() - iOwe() !== 0 ? "" : ";border-top:1px solid var(--line);padding-top:10px") + '">Plus ' + money(selfOwed()) + " borrowed from your own savings, not yet put back.</div>" : "") +
+    "</div>";
+
+  out += card(
+    "Open loans",
+    debts.length ? debts.length + " running" : "All clear",
+    debts.length
+      ? debts
+          .map((d) => {
+            const dl = d.e.due ? daysLeft(d.e.due) : null;
+            const pace = dl != null && dl > 0 ? d.left / dl : null;
+            return (
+              '<div class="item" style="cursor:default;align-items:flex-start">' +
+              '<span class="badge" style="color:' + KIND_COLOR[d.e.kind] + ';border-color:' + KIND_COLOR[d.e.kind] + '">' + KIND[d.e.kind].glyph + "</span>" +
+              '<span class="grow">' +
+              '<span class="row" style="gap:6px"><span class="trunc" style="font-weight:600;font-size:14.5px">' + esc(d.e.person || (d.e.kind === "borrow_own" ? "Savings: " + potName(d.e.from) : "Someone")) + "</span>" +
+              '<span class="pill' + (dl != null && dl < 0 ? " hot" : "") + '">' + (d.e.kind === "lend" ? "owes you" : d.e.kind === "borrow_own" ? "from savings" : "you owe") + "</span></span>" +
+              '<span class="tiny dim" style="display:block">' + esc(d.e.note || KIND[d.e.kind].verb) + " · " + shortDate(d.e.date) + "</span>" +
+              (d.e.due
+                ? '<span class="mini" style="display:block;margin-top:3px;color:' + (dl < 0 ? "var(--bad)" : "var(--ink3)") + '">' +
+                  (dl < 0 ? Math.abs(dl) + " days past " + d.e.due : dl === 0 ? "Due today" : "Due in " + dl + " days") +
+                  (pace ? " · about " + money(pace) + "/day to clear it" : "") + "</span>"
+                : "") +
+              (d.paid > 0 ? '<span class="mini dim num" style="display:block;margin-top:3px">' + money(d.paid) + " of " + money(d.e.amount) + " handled</span>" : "") +
+              '<span style="display:flex;gap:6px;margin-top:9px">' +
+              '<button class="btn sm ghost" onclick="openRepay(\'' + d.e.id + '\')">Log payment</button>' +
+              '<button class="btn sm ghost" onclick="openEdit(\'' + d.e.id + '\')">Edit</button>' +
+              "</span></span>" +
+              '<span class="amt" style="flex:0 0 auto">' + money(d.left) + "</span></div>"
+            );
+          })
+          .join("")
+      : '<div class="empty"><b>Nobody owes anybody.</b><br>Loans you log here get a due date and a daily pace to clear them.</div>'
+  );
+
+  out += card(
+    "Everyone",
+    ppl.length ? ppl.length + " name" + (ppl.length > 1 ? "s" : "") : "",
+    ppl.length
+      ? ppl
+          .map(
+            (p) =>
+              '<button class="item" onclick="go(\'person\',\'' + jsq(encodeURIComponent(p.name)) + '\')">' +
+              '<span class="badge">' + esc(p.name.slice(0, 1).toUpperCase()) + "</span>" +
+              '<span class="grow"><span style="font-weight:600;font-size:14.5px">' + esc(p.name) + "</span>" +
+              '<span class="tiny dim" style="display:block">' +
+              [p.given ? money(p.given) + " given" : "", p.theyOwe ? money(p.theyOwe) + " owed to you" : "", p.iOwe ? money(p.iOwe) + " you owe" : ""].filter(Boolean).join(" · ") +
+              "</span></span>" + icon("right", 16) + "</button>"
+          )
+          .join("")
+      : '<div class="empty">Log something for someone and they show up here with their own chart.</div>'
+  );
+
+  if (settled.length) {
+    out += card("Settled", "Done", entryList(settled.map((d) => d.e)));
+  }
+  return out;
+}
+
+function pagePerson(name) {
+  const nm = decodeURIComponent(name);
+  const mine = S.entries.filter((e) => (e.person || "").trim() === nm);
+  const p = peopleList().find((x) => x.name === nm) || { given: 0, theyOwe: 0, iOwe: 0 };
+  const givenAndLent = mine.filter((e) => e.kind === "give" || e.kind === "lend");
+  const catPack = slices(givenAndLent.filter((e) => e.cat), (e) => e.cat);
+  const kindPack = slices(givenAndLent, (e) => KIND[e.kind].label, (n) => hueFor("t" + n));
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">Person</div><h1>' + esc(nm) + "</h1></div>" +
+    '<button class="ico" onclick="back()" aria-label="Back">' + icon("x") + "</button></div>";
+
+  out +=
+    '<div class="card"><div class="stack" style="gap:9px">' +
+    moneyLine("Given for good", p.given, "") +
+    (p.lent ? moneyLine("Lent over time", p.lent, "") : "") +
+    (p.theyOwe ? moneyLine("Still owes you", p.theyOwe, "") : "") +
+    (p.iOwe ? moneyLine("You still owe", p.iOwe, "") : "") +
+    "</div></div>";
+
+  if (catPack.items.length) {
+    out += card("What " + nm + " got it for", "Their breakdown", donut(catPack, money(catPack.total), "to " + nm.split(" ")[0]));
+  }
+  if (kindPack.items.length > 1) out += card("Gift vs loan", "Split", bars(kindPack));
+
+  out += card("Everything with " + nm, mine.length + " entries", entryList(mine, { hidePerson: true }));
+  out +=
+    '<div class="row" style="gap:8px;margin-bottom:20px">' +
+    '<button class="btn ghost" onclick="openAdd(\'give\',{person:\'' + jsq(nm) + '\'})">Give ' + esc(nm.split(" ")[0]) + " money</button>" +
+    '<button class="btn ghost" onclick="openAdd(\'lend\',{person:\'' + jsq(nm) + '\'})">Lend</button>' +
+    "</div>";
+  return out;
+}
+
+/* ============================================================
+   POT DETAIL — a source of money, or a savings goal
+   ============================================================ */
+function pagePot(id) {
+  const p = pot(id);
+  if (!p) return '<div class="top"><h1>Gone</h1></div><button class="btn ghost" onclick="back()">Back</button>';
+  const isGoal = p.kind === "goal";
+  const bal = balanceOf(id);
+  const outgoing = S.entries.filter((e) => e.from === id);
+  const incoming = S.entries.filter((e) => e.to === id);
+  const mine = S.entries.filter((e) => e.from === id || e.to === id).sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const outPack = slices(outgoing, (e) => (e.kind === "expense" ? e.cat || "Other" : e.kind === "save" ? "Into " + potName(e.to) : e.kind === "move" ? "Moved to " + potName(e.to) : KIND[e.kind].label + (e.person ? " · " + e.person : "")));
+  const inPack = slices(incoming, (e) => (e.from ? potName(e.from) : KIND[e.kind].label));
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">' + (isGoal ? "Savings goal" : "Source of money") + '</div><h1>' + esc(p.name) + "</h1></div>" +
+    '<button class="ico" onclick="back()" aria-label="Back">' + icon("x") + "</button></div>";
+
+  out +=
+    '<div class="card torn"><div class="eyebrow">' + (isGoal ? "Put away" : "Balance") + "</div>" +
+    '<div class="num" style="font-size:32px;font-weight:650;letter-spacing:-.04em;margin:5px 0 3px;color:' + (bal < 0 ? "var(--bad)" : "var(--ink)") + '">' + signed(bal) + "</div>" +
+    (isGoal && p.target
+      ? '<div class="tiny dim" style="margin-bottom:10px">of ' + money(p.target) + " target · " + Math.round(clamp(bal / p.target, 0, 1) * 100) + "% there</div>" +
+        '<div class="track"><div class="fill" style="width:' + clamp(bal / p.target, 0, 1) * 100 + '%"></div></div>'
+      : '<div class="tiny dim">' + money(sum(incoming.map((e) => e.amount))) + " in, " + money(sum(outgoing.map((e) => e.amount))) + " out, all time</div>") +
+    "</div>";
+
+  out +=
+    '<div class="row" style="gap:8px;margin-bottom:12px">' +
+    (isGoal
+      ? '<button class="btn ghost" onclick="openAdd(\'save\',{to:\'' + id + '\'})">Add to goal</button>' +
+        '<button class="btn ghost" onclick="openAdd(\'borrow_own\',{from:\'' + id + "',to:firstAccount()})\">Borrow from this goal</button>"
+      : '<button class="btn ghost" onclick="openAdd(\'income\',{to:\'' + id + '\'})">Money in</button>' +
+        '<button class="btn ghost" onclick="openAdd(\'expense\',{from:\'' + id + '\'})">Spend from here</button>') +
+    "</div>" +
+    (isGoal
+      ? '<div class="center" style="margin:-4px 0 12px"><button class="tiny dim" onclick="openAdd(\'move\',{from:\'' + id + "',to:firstAccount()})\">or just move money out, untracked</button></div>"
+      : "");
+
+  if (isGoal) {
+    const openLoan = debtRows().find((d) => d.e.kind === "borrow_own" && d.e.from === id && !d.settled);
+    if (openLoan) {
+      out +=
+        '<div class="alert">' + money(openLoan.left) + " borrowed out of this goal, not yet put back." +
+        ' <button class="btn sm ghost" style="margin-top:9px" onclick="openRepay(\'' + openLoan.e.id + '\')">Put it back</button></div>';
+    }
+  }
+
+  if (inPack.items.length) {
+    out += card(isGoal ? "Where this savings came from" : "Where the money came from", "In", donut(inPack, money(inPack.total), "in"));
+  }
+  if (outPack.items.length) {
+    out += card(isGoal ? "What you took it out for" : "What left " + p.name, "Out", donut(outPack, money(outPack.total), "out"));
+  }
+  out += card("Movements", mine.length + " entries", entryList(mine));
+
+  if (!mine.length) {
+    out +=
+      '<button class="btn danger" style="margin-bottom:20px" onclick="S.pots=S.pots.filter(x=>x.id!==\'' + id + "');save();back()\">Remove " + esc(p.name) + "</button>";
+  } else {
+    out +=
+      '<button class="btn ghost" style="margin-bottom:20px" onclick="renamePot(\'' + id + '\')">Rename' + (isGoal ? " or change target" : "") + "</button>";
+  }
+  return out;
+}
+function renamePot(id) {
+  const p = pot(id);
+  const nm = prompt("Name", p.name);
+  if (nm && nm.trim()) p.name = nm.trim();
+  if (p.kind === "goal") {
+    const t = prompt("Target amount (blank for none)", p.target || "");
+    if (t === "") delete p.target;
+    else if (t != null && parseFloat(t) > 0) p.target = parseFloat(t);
+  }
+  save();
+  render();
+}
+
+/* ============================================================
+   BOOK — full history with search
+   ============================================================ */
+function pageBook() {
+  const q = UI.search.trim().toLowerCase();
+  let list = S.entries.slice();
+  if (UI.filter !== "all") list = list.filter((e) => e.kind === UI.filter);
+  if (q) {
+    list = list.filter((e) =>
+      [e.person, e.note, e.cat, KIND[e.kind].label, potName(e.from), potName(e.to), String(e.amount), e.date].join(" ").toLowerCase().indexOf(q) >= 0
+    );
+  }
+  list.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.createdAt - a.createdAt));
+
+  const grouped = {};
+  list.forEach((e) => {
+    const k = monthOf(e.date);
+    (grouped[k] = grouped[k] || []).push(e);
+  });
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">Every movement</div><h1>The book</h1></div></div>' +
+    '<div class="card" style="padding:12px"><div class="row" style="gap:9px">' + '<span class="dim">' + icon("search", 18) + "</span>" +
+    '<input id="q" value="' + esc(UI.search) + '" placeholder="Search name, note, amount…" oninput="UI.search=this.value;renderSoft()" style="border:none;background:none;padding:6px 0">' +
+    (UI.search ? '<button class="dim" onclick="UI.search=\'\';render()">' + icon("x", 18) + "</button>" : "") +
+    "</div></div>";
+
+  out +=
+    '<div class="wrap" style="margin-bottom:14px">' +
+    '<button class="chip" aria-pressed="' + (UI.filter === "all") + '" onclick="UI.filter=\'all\';render()">All</button>' +
+    Object.keys(KIND)
+      .filter((k) => S.entries.some((e) => e.kind === k))
+      .map((k) => '<button class="chip" aria-pressed="' + (UI.filter === k) + '" onclick="UI.filter=\'' + k + "';render()\">" + KIND[k].label + "</button>")
+      .join("") +
+    "</div>";
+
+  if (!list.length) {
+    out += '<div class="empty" style="padding:36px 18px"><b>' + (q ? "Nothing matches “" + esc(UI.search) + "”." : "The book is empty.") + "</b><br>" + (q ? "Try a name, a note, or an amount." : "Tap the + button to log your first movement.") + "</div>";
+    return out;
+  }
+
+  Object.keys(grouped)
+    .sort()
+    .reverse()
+    .forEach((mk) => {
+      const es = grouped[mk];
+      const spent = sum(es.filter((e) => e.kind === "expense").map((e) => e.amount));
+      const inc = sum(es.filter((e) => e.kind === "income").map((e) => e.amount));
+      out += card(
+        monthName(mk),
+        es.length + " entr" + (es.length === 1 ? "y" : "ies"),
+        entryList(es),
+        '<div class="mini dim num" style="text-align:right">+' + money(inc) + "<br>−" + money(spent) + "</div>"
+      );
+    });
+  return out;
+}
+
+/* ============================================================
+   PLANS — expected money, notes, repeats
+   ============================================================ */
+function pagePlans() {
+  const pend = S.expected.filter((x) => !x.done);
+  const got = S.expected.filter((x) => x.done);
+  const total = sum(pend.map((x) => parseFloat(x.amount) || 0));
+
+  let out =
+    '<div class="top"><div><div class="eyebrow">Your notebook</div><h1>Plans &amp; notes</h1></div></div>';
+
+  out += card(
+    "Money you're expecting",
+    pend.length ? money(total) + " in total" : "Nothing pending",
+    (pend.length
+      ? pend
+          .map((x) => {
+            const dl = x.when ? daysLeft(x.when) : null;
+            return (
+              '<div class="item" style="align-items:flex-start;cursor:default">' +
+              '<span class="badge">' + icon("down", 14) + "</span>" +
+              '<span class="grow"><span class="row" style="gap:6px"><span class="trunc" style="font-weight:600;font-size:14.5px">' + esc(x.what) + "</span>" +
+              (dl != null ? '<span class="pill' + (dl < 0 ? " hot" : "") + '">' + (dl < 0 ? Math.abs(dl) + "d late" : dl === 0 ? "today" : "in " + dl + "d") + "</span>" : "") +
+              "</span>" +
+              '<span class="tiny dim" style="display:block">' + [x.who, x.when ? "expected " + shortDate(x.when) : "", x.note].filter(Boolean).map(esc).join(" · ") + "</span>" +
+              '<span style="display:flex;gap:6px;margin-top:9px">' +
+              '<button class="btn sm" onclick="receiveExpected(\'' + x.id + '\')">Got it</button>' +
+              '<button class="btn sm ghost" onclick="editExpected(\'' + x.id + '\')">Edit</button>' +
+              "</span></span>" +
+              '<span class="amt">' + money(parseFloat(x.amount) || 0) + "</span></div>"
+            );
+          })
+          .join("")
+      : '<div class="empty"><b>Nothing pending.</b><br>Write down what you\'re waiting on — a side gig payment, a refund, salary — so you can plan against it.</div>') +
+      '<button class="btn ghost sm" style="width:100%;margin-top:14px" onclick="editExpected()">Add something you\'re expecting</button>'
+  );
+
+  if (got.length) {
+    out += card(
+      "Already came in",
+      got.length + " received",
+      got
+        .map(
+          (x) =>
+            '<div class="item" style="cursor:default"><span class="badge">' + icon("check", 14) + "</span>" +
+            '<span class="grow"><span class="trunc" style="font-weight:600;font-size:14px">' + esc(x.what) + "</span>" +
+            '<span class="tiny dim" style="display:block">' + (x.gotOn ? "on " + shortDate(x.gotOn) : "received") + "</span></span>" +
+            '<span class="amt dim">' + money(parseFloat(x.amount) || 0) + "</span>" +
+            '<button class="dim" style="padding:4px" onclick="S.expected=S.expected.filter(q=>q.id!==\'' + x.id + "');save();render()\" aria-label=\"Remove\">" + icon("x", 15) + "</button></div>"
+        )
+        .join("")
+    );
+  }
+
+  out += card(
+    "Repeats every month",
+    S.recurring.length ? S.recurring.length + " set up" : "",
+    (S.recurring.length
+      ? S.recurring
+          .map(
+            (r) =>
+              '<div class="item" style="cursor:default"><span class="badge">' + KIND[r.kind].glyph + "</span>" +
+              '<span class="grow"><span style="font-weight:600;font-size:14px">' + esc(r.name || KIND[r.kind].label) + "</span>" +
+              '<span class="tiny dim" style="display:block">' + KIND[r.kind].verb + " · " + (r.from ? potName(r.from) : potName(r.to)) + " · day " + (r.day || 1) +
+              (r.lastPosted === monthOf(today()) ? " · done this month" : "") + "</span></span>" +
+              '<span class="amt">' + money(r.amount) + "</span>" +
+              '<button class="dim" style="padding:4px" onclick="S.recurring=S.recurring.filter(q=>q.id!==\'' + r.id + "');save();render()\" aria-label=\"Remove\">" + icon("x", 15) + "</button></div>"
+          )
+          .join("")
+      : '<div class="empty">Rent, data, transfers you make every month — set them once and just tap Log when they show up.</div>') +
+      '<button class="btn ghost sm" style="width:100%;margin-top:14px" onclick="openSheet(\'recurring\')">Add a monthly repeat</button>'
+  );
+
+  out += card(
+    "Notes to self",
+    "",
+    (S.notes.length
+      ? S.notes
+          .map(
+            (n) =>
+              '<div class="item" style="cursor:default;align-items:flex-start"><span class="grow" style="font-size:14px;white-space:pre-wrap">' + esc(n.text) +
+              '<span class="mini dim" style="display:block;margin-top:4px">' + shortDate(n.at) + "</span></span>" +
+              '<button class="dim" style="padding:4px" onclick="S.notes=S.notes.filter(q=>q.id!==\'' + n.id + "');save();render()\" aria-label=\"Remove note\">" + icon("x", 15) + "</button></div>"
+          )
+          .join("")
+      : "") +
+      '<textarea id="newnote" rows="2" placeholder="Anything you want to remember about money…" style="margin-top:' + (S.notes.length ? "12px" : "0") + '"></textarea>' +
+      '<button class="btn ghost sm" style="width:100%;margin-top:8px" onclick="addNote()">Save note</button>'
+  );
+  return out;
+}
+function addNote() {
+  const el = document.getElementById("newnote");
+  const t = (el.value || "").trim();
+  if (!t) return;
+  S.notes.unshift({ id: uid(), text: t, at: today() });
+  save();
+  render();
+  toast("Note saved");
+}
+function editExpected(id) {
+  UI.sheet = { name: "expected", arg: { id: id || null } };
+  render();
+}
+function expectedSheet() {
+  const x = UI.sheet.arg.id ? S.expected.find((q) => q.id === UI.sheet.arg.id) : null;
+  return (
+    '<div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>' + (x ? "Edit" : "Money you're expecting") + "</h2>" +
+    '<button class="ico" onclick="closeSheet()" aria-label="Close">' + icon("x") + "</button></div>" +
+    '<div class="field"><div class="label">What is it?</div><input id="x_what" value="' + esc(x ? x.what : "") + '" placeholder="e.g. Data side gig — August"></div>' +
+    '<div class="field"><div class="label">How much</div><input id="x_amount" type="number" inputmode="decimal" value="' + esc(x ? x.amount : "") + '" placeholder="' + S.settings.currency + '0"></div>' +
+    '<div class="field"><div class="label">From who (optional)</div><input id="x_who" value="' + esc(x ? x.who || "" : "") + '" placeholder="Name or company"></div>' +
+    '<div class="field"><div class="label">Expected when (optional)</div><input id="x_when" type="date" value="' + esc(x ? x.when || "" : "") + '"></div>' +
+    '<div class="field"><div class="label">Note (optional)</div><input id="x_note" value="' + esc(x ? x.note || "" : "") + '" placeholder="Anything to remember"></div>' +
+    '<button class="btn" onclick="saveExpected(' + (x ? "'" + x.id + "'" : "null") + ')">' + (x ? "Save changes" : "Add it") + "</button>" +
+    (x ? '<button class="btn danger" style="margin-top:10px" onclick="S.expected=S.expected.filter(q=>q.id!==\'' + x.id + "');save();closeSheet()\">Remove</button>" : "")
+  );
+}
+function saveExpected(id) {
+  const g = (k) => document.getElementById("x_" + k).value;
+  const what = g("what").trim();
+  if (!what) return;
+  const data = { what: what, amount: g("amount"), who: g("who").trim(), when: g("when"), note: g("note").trim() };
+  if (id) Object.assign(S.expected.find((q) => q.id === id), data);
+  else S.expected.unshift(Object.assign({ id: uid(), done: false }, data));
+  save();
+  closeSheet();
+  toast(id ? "Updated" : "Added to what you're expecting");
+}
+function receiveExpected(id) {
+  const x = S.expected.find((q) => q.id === id);
+  if (!x) return;
+  openAdd("income", { amount: String(parseFloat(x.amount) || ""), note: x.what, expectedId: id, to: firstAccount() });
+}
+
+/* recurring sheet */
+function recurringSheet() {
+  const accs = accounts();
+  return (
+    '<div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Monthly repeat</h2>' +
+    '<button class="ico" onclick="closeSheet()" aria-label="Close">' + icon("x") + "</button></div>" +
+    '<div class="note">Set it once. Each month the app shows it on your home screen and you tap Log — nothing is written without you.</div>' +
+    '<div class="field"><div class="label">Name it</div><input id="r_name" placeholder="e.g. Rent"></div>' +
+    '<div class="field"><div class="label">What kind</div><select id="r_kind">' +
+      ["expense", "income", "save"].map((k) => '<option value="' + k + '">' + KIND[k].label + "</option>").join("") +
+    "</select></div>" +
+    '<div class="field"><div class="label">How much</div><input id="r_amount" type="number" inputmode="decimal" placeholder="' + S.settings.currency + '0"></div>' +
+    '<div class="field"><div class="label">Which source</div><select id="r_pot">' +
+      accs.map((p) => '<option value="' + p.id + '">' + esc(p.name) + "</option>").join("") +
+    "</select></div>" +
+    '<div class="field"><div class="label">Which goal (only if saving)</div><select id="r_goal"><option value="">—</option>' +
+      goals().map((p) => '<option value="' + p.id + '">' + esc(p.name) + "</option>").join("") +
+    "</select></div>" +
+    '<div class="field"><div class="label">Day of the month</div><input id="r_day" type="number" min="1" max="28" value="1"></div>' +
+    '<button class="btn" onclick="saveRecurring()">Save repeat</button>'
+  );
+}
+function saveRecurring() {
+  const g = (k) => document.getElementById("r_" + k).value;
+  const amount = parseFloat(g("amount"));
+  const kind = g("kind");
+  if (!(amount > 0)) return;
+  const potId = g("pot"), goalId = g("goal");
+  const r = {
+    id: uid(), name: g("name").trim() || KIND[kind].label, kind: kind, amount: amount,
+    from: kind === "income" ? null : potId,
+    to: kind === "income" ? potId : kind === "save" ? goalId || null : null,
+    cat: kind === "expense" ? "Bills" : "",
+    day: clamp(parseInt(g("day"), 10) || 1, 1, 28),
+    active: true, lastPosted: null,
+  };
+  if (kind === "save" && !r.to) return;
+  S.recurring.push(r);
+  save();
+  closeSheet();
+  toast("Repeat saved");
+}
+
+/* ============================================================
+   SETTINGS + BACKUP
+   ============================================================ */
+function pageSettings() {
+  const b = balances();
+  let out =
+    '<div class="top"><div><div class="eyebrow">This app</div><h1>Settings</h1></div>' +
+    '<button class="ico" onclick="back()" aria-label="Back">' + icon("x") + "</button></div>";
+
+  out += card(
+    "Your money lives on this phone",
+    "Backup",
+    '<div class="tiny muted" style="margin-bottom:14px">Nothing is sent anywhere — which also means nobody can get it back for you. Save a copy sometimes, especially before clearing your browser or changing phone.</div>' +
+    '<button class="btn ghost" onclick="exportData()">Save a backup file</button>' +
+    '<div style="height:8px"></div><button class="btn ghost" onclick="copyData()">Copy backup as text</button>' +
+    '<div style="height:8px"></div><label class="btn ghost" style="display:block;text-align:center;line-height:22px">Restore from a backup<input type="file" accept=".json,application/json" onchange="importFile(this)" style="display:none"></label>' +
+    '<div class="mini dim center" style="margin-top:10px">' + S.entries.length + " entries · " + S.pots.length + " pots · last change " + (S.entries[0] ? shortDate(S.entries[0].date) : "—") + "</div>"
+  );
+
+  out += card(
+    "Appearance",
+    "",
+    '<div class="seg">' +
+    '<button aria-pressed="' + (S.settings.theme !== "light") + '" onclick="S.settings.theme=\'dark\';save();applyTheme();render()">' + icon("moon", 15) + " Dark</button>" +
+    '<button aria-pressed="' + (S.settings.theme === "light") + '" onclick="S.settings.theme=\'light\';save();applyTheme();render()">' + icon("sun", 15) + " Light</button>" +
+    "</div>"
+  );
+
+  out += card(
+    "Sources of money",
+    "Pots",
+    accounts()
+      .map(
+        (p) =>
+          '<div class="item" style="cursor:default"><span class="grow" style="font-size:14px">' + esc(p.name) + "</span>" +
+          '<span class="num tiny dim">' + signed(b[p.id] || 0) + "</span>" +
+          '<button class="dim" style="padding:4px" onclick="renamePot(\'' + p.id + '\')" aria-label="Rename">' + icon("gear", 15) + "</button></div>"
+      )
+      .join("") +
+      '<div class="row" style="gap:8px;margin-top:12px"><input id="newpot" placeholder="Add a source"><button class="btn sm" onclick="addPot(document.getElementById(\'newpot\').value,\'account\');render()">Add</button></div>'
+  );
+
+  out += card(
+    "Savings goals",
+    "",
+    (goals().length
+      ? goals()
+          .map(
+            (p) =>
+              '<div class="item" style="cursor:default"><span class="grow" style="font-size:14px">' + esc(p.name) + "</span>" +
+              '<span class="num tiny dim">' + money(b[p.id] || 0) + (p.target ? " / " + money(p.target) : "") + "</span>" +
+              '<button class="dim" style="padding:4px" onclick="renamePot(\'' + p.id + '\')" aria-label="Rename">' + icon("gear", 15) + "</button></div>"
+          )
+          .join("")
+      : '<div class="empty">No goals yet — make one when you save.</div>')
+  );
+
+  out += card(
+    "Categories",
+    "",
+    '<div class="wrap">' + S.cats.map((c) => '<span class="chip" style="cursor:default">' + esc(c) + "</span>").join("") + "</div>" +
+    '<div class="row" style="gap:8px;margin-top:12px"><input id="newcat" placeholder="Add a category"><button class="btn sm" onclick="addCat(document.getElementById(\'newcat\').value);render()">Add</button></div>'
+  );
+
+  out += card(
+    "Currency symbol",
+    "",
+    '<div class="row" style="gap:8px"><input id="cur" value="' + esc(S.settings.currency) + '" maxlength="3" style="width:80px">' +
+    '<button class="btn sm" onclick="S.settings.currency=document.getElementById(\'cur\').value||\'₦\';save();render()">Set</button></div>'
+  );
+
+  out +=
+    '<button class="btn danger" style="margin-bottom:24px" onclick="wipe()">Erase everything on this device</button>';
+  return out;
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(S, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ledger-backup-" + today() + ".json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast("Backup saved to your downloads");
+}
+function copyData() {
+  const txt = JSON.stringify(S);
+  const done = () => toast("Backup copied — paste it somewhere safe");
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+  else fallbackCopy(txt, done);
+}
+function fallbackCopy(txt, done) {
+  const t = document.createElement("textarea");
+  t.value = txt;
+  document.body.appendChild(t);
+  t.select();
+  try { document.execCommand("copy"); done(); } catch (e) { toast("Couldn't copy — use the backup file instead"); }
+  t.remove();
+}
+function importFile(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !Array.isArray(d.entries)) throw 0;
+      if (!confirm("Replace what's on this phone with the backup? " + d.entries.length + " entries will load.")) return;
+      S = Object.assign(blank(), d);
+      S.settings = Object.assign(blank().settings, d.settings || {});
+      save();
+      UI.page = null;
+      UI.tab = "home";
+      render();
+      toast("Backup restored");
+    } catch (e) {
+      toast("That file isn't a Ledger backup");
+    }
+  };
+  r.readAsText(f);
+}
+function wipe() {
+  if (!confirm("Erase every entry, source and note on this device? This cannot be undone.")) return;
+  if (!confirm("Really erase it all? Save a backup first if you're not sure.")) return;
+  S = blank();
+  save();
+  UI.page = null;
+  UI.tab = "home";
+  render();
+  toast("Everything erased");
+}
+/* ============================================================
+   ROUTER + RENDER
+   ============================================================ */
+function go(page, arg) {
+  UI.page = { name: page, arg: arg };
+  window.scrollTo(0, 0);
+  render();
+}
+function back() {
+  UI.page = null;
+  render();
+}
+const TABS = [
+  { k: "home", label: "Home", icon: "home", page: pageHome },
+  { k: "charts", label: "Charts", icon: "chart", page: pageCharts },
+  { k: "people", label: "People", icon: "people", page: pagePeople },
+  { k: "book", label: "Book", icon: "book", page: pageBook },
+];
+
+function render() {
+  let body;
+  if (UI.page) {
+    const n = UI.page.name;
+    body =
+      n === "pot" ? pagePot(UI.page.arg)
+      : n === "person" ? pagePerson(UI.page.arg)
+      : n === "settings" ? pageSettings()
+      : n === "plans" ? pagePlans()
+      : pageHome();
+  } else {
+    const t = TABS.find((x) => x.k === UI.tab);
+    body = t ? t.page() : pageHome();
+  }
+  $("#app").innerHTML = body;
+
+  /* nav */
+  const showing = UI.page && UI.page.name === "plans" ? "plans" : UI.page ? "" : UI.tab;
+  const item = (t) =>
+    '<button aria-pressed="' + (showing === t.k) + '" onclick="UI.tab=\'' + t.k + "';UI.page=null;render()\">" +
+    icon(t.icon, 21) + '<span class="lab">' + t.label + "</span></button>";
+  $("#nav").innerHTML =
+    item(TABS[0]) + item(TABS[1]) +
+    '<button class="fab" onclick="openAdd(\'expense\')" aria-label="Add a money movement">' + icon("plus", 24) + "</button>" +
+    item(TABS[2]) +
+    '<button aria-pressed="' + (showing === "plans") + '" onclick="go(\'plans\')">' + icon("note", 21) + '<span class="lab">Plans</span></button>';
+
+  /* sheet */
+  const m = $("#modal");
+  if (UI.sheet) {
+    const inner =
+      UI.sheet.name === "entry" ? entrySheet()
+      : UI.sheet.name === "confirmDelete" ? confirmDeleteSheet()
+      : UI.sheet.name === "expected" ? expectedSheet()
+      : UI.sheet.name === "recurring" ? recurringSheet()
+      : "";
+    m.innerHTML =
+      '<div class="scrim" onclick="if(event.target===this)closeSheet()"><div class="sheet" role="dialog" aria-modal="true">' +
+      '<div class="grab"></div>' + inner + "</div></div>";
+    document.body.style.overflow = "hidden";
+  } else {
+    m.innerHTML = "";
+    document.body.style.overflow = "";
+  }
+}
+
+/* search re-render that keeps the cursor in the box */
+function renderSoft() {
+  const el = document.getElementById("q");
+  const pos = el ? el.selectionStart : null;
+  render();
+  const el2 = document.getElementById("q");
+  if (el2) {
+    el2.focus();
+    if (pos != null) try { el2.setSelectionRange(pos, pos); } catch (e) {}
+  }
+}
+
+/* the Book tab is where the search box lives, so route the nav there */
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && UI.sheet) closeSheet();
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+load();
+if (!S.entries.length && !localStorage.getItem(KEY)) save();
+render();
+
+/* first run: gentle nudge instead of an empty screen */
+if (!S.entries.length) {
+  setTimeout(() => toast("Tap + to log your first movement"), 700);
+}
+  if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}
+</script>
+</body>
+</html>
